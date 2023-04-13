@@ -1,38 +1,31 @@
-package com.malachi.sidescroller;
+package com.malachi.sidescrollergame;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 
-abstract class Ship {
-    float movementSpeed;
+abstract class Character {
+    float speed;
     Rectangle boundingBox;
-    float projectileWidth, projectileHeight;
-    float projectileMovementSpeed;
     float timeBetweenShots;
     float timeSinceLastShot = 0;
-    protected TextureRegion shipTextureRegion, projectileTextureRegion;
+    TextureRegion characterTexture;
 
-    public Ship(float movementSpeed, float width, float height,
-                float posX, float posY,
-                float projectileWidth, float projectileHeight, float projectileMovementSpeed, float timeBetweenShots,
-                TextureRegion projectileTextureRegion
+    public Character(float movementSpeed, float width, float height,
+                     float posX, float posY,
+                     float timeBetweenShots
     ) {
-        this.movementSpeed = movementSpeed;
+        this.speed = movementSpeed;
         this.boundingBox = new Rectangle(posX - width / 2, posY - height / 2, width, height);
-        this.projectileWidth = projectileWidth;
-        this.projectileHeight = projectileHeight;
-        this.projectileMovementSpeed = projectileMovementSpeed;
         this.timeBetweenShots = timeBetweenShots;
-        this.projectileTextureRegion = projectileTextureRegion;
     }
 
-    public void update(float deltaTime) {
-        timeSinceLastShot += deltaTime;
+    public void update(float delta) {
+        timeSinceLastShot += delta;
     }
 
     public boolean canShoot() {
-        return timeSinceLastShot - timeBetweenShots >= 0;
+         return timeSinceLastShot - timeBetweenShots >= 0;
     }
 
     public void hit(Projectile projectile) {
@@ -50,6 +43,6 @@ abstract class Ship {
     }
 
     public void draw(Batch batch) {
-        batch.draw(shipTextureRegion, boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height);
+        batch.draw(characterTexture, boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height);
     }
 }

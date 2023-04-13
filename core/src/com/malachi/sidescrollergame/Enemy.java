@@ -1,15 +1,11 @@
-package com.malachi.sidescroller;
+package com.malachi.sidescrollergame;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.collision.BoundingBox;
 
-import java.io.Console;
-
-public class Enemy extends Ship {
+public class Enemy extends Character {
 
     public enum State {
         IDLE,
@@ -23,11 +19,9 @@ public class Enemy extends Ship {
     private TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
 
     public Enemy(float movementSpeed, float width, float height,
-                 float posX, float posY,
-                 float projectileWidth, float projectileHeight, float projectileMovementSpeed,
-                 float timeBetweenShots,
-                 TextureRegion projectileTextureRegion) {
-        super(movementSpeed, width, height, posX, posY, projectileWidth, projectileHeight, projectileMovementSpeed, timeBetweenShots, projectileTextureRegion);
+                 float posX, float posY, float timeBetweenShots)
+                 {
+        super(movementSpeed, width, height, posX, posY, timeBetweenShots);
 
         dieAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Destroyed"), Animation.PlayMode.LOOP);
         movingAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Moving"), Animation.PlayMode.LOOP);
@@ -48,10 +42,10 @@ public class Enemy extends Ship {
     @Override
     public void update(float delta) {
         super.update(delta);
-        System.out.println(boundingBox.x);
+
         //moves the enemy faster if they are not on screen
         if (boundingBox.x > 128) boundingBox.x -= ((int) (Math.random() * 10) + 1) * delta;
-        else boundingBox.x -= movementSpeed * delta;
+        else boundingBox.x -= speed * delta;
 
         stateTime += delta;
 
@@ -69,7 +63,7 @@ public class Enemy extends Ship {
                     float randomY = minY + SideScrollerGame.random.nextFloat() * (maxY - minY);
 
                     setCurrentState(State.MOVING);
-                    movementSpeed = 20;
+                    speed = 20;
                     translate(boundingBox.x + 80f, randomY);
                 }
                 break;
@@ -77,13 +71,14 @@ public class Enemy extends Ship {
                 currentAnimation = movingAnimation;
                 break;
         }
-        shipTextureRegion = currentAnimation.getKeyFrame(stateTime);
+        characterTexture = currentAnimation.getKeyFrame(stateTime);
     }
 
     @Override
     public Projectile[] fireProjectiles() {
+        TextureRegion playerProjectileTextureRegion =  enemyAtlas.findRegion("skeleton-Idle");
         Projectile[] projectiles = new Projectile[1];
-        projectiles[0] = new Projectile(boundingBox.x, boundingBox.y, projectileWidth, projectileHeight, projectileMovementSpeed, projectileTextureRegion);
+        projectiles[0] = new Projectile(boundingBox.x + 8f, boundingBox.y, 1, 4, 10, playerProjectileTextureRegion);
         timeSinceLastShot = 0;
         return projectiles;
     }

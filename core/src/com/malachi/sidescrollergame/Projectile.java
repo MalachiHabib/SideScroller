@@ -1,5 +1,7 @@
 package com.malachi.sidescrollergame;
 
+import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
+
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
@@ -17,6 +19,7 @@ public class Projectile {
     }
 
     public void draw(Batch batch) {
+        System.out.println(boundingBox.x > WORLD_WIDTH);
         batch.draw(textureRegion, boundingBox.x - boundingBox.width / 2, boundingBox.y, boundingBox.width, boundingBox.height);
     }
 }

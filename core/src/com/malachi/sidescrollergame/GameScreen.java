@@ -1,4 +1,4 @@
-package com.malachi.sidescroller;
+package com.malachi.sidescrollergame;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -6,8 +6,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -23,20 +21,19 @@ class GameScreen implements Screen {
     private Camera camera;
     private Viewport viewport;
     private Texture[] backgrounds;
-    private float[] backgroundOffsets = {0, 0, 0, 0};
-    private float backgroundMaxScrollSpeed;
-    private TextureAtlas textureAtlas;
-    private TextureRegion playerShipTextureRegion, playerProjectileTextureRegion, enemyShipTextureRegion;
+    private float[] bgOffsets = {0, 0, 0, 0};
+    private float bgSpeed;
+
+    //characters
     private Player player;
-    private Enemy en;
-    private Enemy[] enemies = new Enemy[2];
+    private Enemy enemy;
+
+    //projectiles
     private LinkedList<Projectile> playerProjectileList;
 
     public GameScreen(SideScrollerGame game) {
         this.game = game;
         camera = new OrthographicCamera();
-        textureAtlas = new TextureAtlas("playerIdleAnimation.atlas");
-        playerProjectileTextureRegion = textureAtlas.findRegion("skeleton-MovingNIdle");
 
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         backgrounds = new Texture[4];
@@ -45,13 +42,9 @@ class GameScreen implements Screen {
         backgrounds[2] = new Texture("Layer3.png");
         backgrounds[3] = new Texture("Layer4.png");
 
-        backgroundMaxScrollSpeed = (float) WORLD_HEIGHT / 4;
-
-        for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new Enemy(20, 10, 10, WORLD_WIDTH * (i + 1) * 2, WORLD_HEIGHT / ((int) (Math.random() * 9) + 2) , 4, 2, 45, 0.5f, playerProjectileTextureRegion);
-        }
-        player = new Player(40, 10, 10, WORLD_WIDTH / 8, WORLD_HEIGHT / 4, 4, 2, 45, 0.5f, playerProjectileTextureRegion);
-        en = new Enemy(20, 10, 10, WORLD_WIDTH, WORLD_HEIGHT * 2, 4, 2, 45, 0.5f, playerProjectileTextureRegion);
+        bgSpeed = (float) WORLD_HEIGHT / 4;
+        player = new Player(40, 10, 10, WORLD_WIDTH / 8, WORLD_HEIGHT / 4, 0.5f);
+        enemy = new Enemy(40, 10, 10, WORLD_WIDTH / 2, WORLD_HEIGHT / 4, 0.5f);
         playerProjectileList = new LinkedList<>();
     }
 
@@ -59,22 +52,32 @@ class GameScreen implements Screen {
     public void render(float delta) {
         game.batch.begin();
         detectInput(delta);
-        player.update(delta);
-
-        for (Enemy enemy : enemies) {
-            enemy.update(delta);
-        }
-
         renderBackground(delta);
+
+        enemy.update(delta);
+        enemy.draw(game.batch);
+
+
+        player.update(delta);
         player.draw(game.batch);
 
-        for (Enemy enemy : enemies) {
-            enemy.draw(game.batch);
-        }
-
         renderProjectiles(delta);
-        detectCollisions();
         game.batch.end();
+    }
+
+    private void renderBackground(float delta) {
+        bgOffsets[0] += delta * bgSpeed / 8;
+        bgOffsets[1] += delta * bgSpeed / 4;
+        bgOffsets[2] += delta * bgSpeed / 2;
+        bgOffsets[3] += delta * bgSpeed;
+
+        for (int i = 0; i < bgOffsets.length; i++) {
+            if (bgOffsets[i] > WORLD_WIDTH) {
+                bgOffsets[i] = 0;
+            }
+            game.batch.draw(backgrounds[i], -bgOffsets[i], 0, WORLD_WIDTH, WORLD_HEIGHT);
+            game.batch.draw(backgrounds[i], -bgOffsets[i] + WORLD_WIDTH, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        }
     }
 
     private void detectInput(float delta) {
@@ -85,14 +88,14 @@ class GameScreen implements Screen {
 
         float xMovement = 0f, yMovement = 0f;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            xMovement = Math.min(player.movementSpeed * delta, rightBoundary);
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            xMovement = Math.max(-player.movementSpeed * delta, leftBoundary);
-        if (Gdx.input.isKeyPressed(Input.Keys.UP))
-            yMovement = Math.min(player.movementSpeed * delta, topBoundary);
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-            yMovement = Math.max(-player.movementSpeed * delta, bottomBoundary);
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
+            xMovement = Math.min(player.speed * delta, rightBoundary);
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
+            xMovement = Math.max(-player.speed * delta, leftBoundary);
+        if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W))
+            yMovement = Math.min(player.speed * delta, topBoundary);
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))
+            yMovement = Math.max(-player.speed * delta, bottomBoundary);
 
         player.translate(xMovement, yMovement);
 
@@ -105,34 +108,13 @@ class GameScreen implements Screen {
                 float yTouchDifference = touchPosition.y - playerCenter.y;
                 float distance = touchPosition.dst(playerCenter);
 
-                float touchXMovement = xTouchDifference / distance * player.movementSpeed * delta;
-                float touchYMovement = yTouchDifference / distance * player.movementSpeed * delta;
+                float touchXMovement = xTouchDifference / distance * player.speed * delta;
+                float touchYMovement = yTouchDifference / distance * player.speed * delta;
 
                 touchXMovement = (touchXMovement > 0) ? Math.min(touchXMovement, rightBoundary) : Math.max(touchXMovement, leftBoundary);
                 touchYMovement = (touchYMovement > 0) ? Math.min(touchYMovement, topBoundary) : Math.max(touchYMovement, bottomBoundary);
 
                 player.translate(touchXMovement, touchYMovement);
-            }
-        }
-    }
-
-
-    private void detectCollisions() {
-        ListIterator<Projectile> iterator = playerProjectileList.listIterator();
-        while (iterator.hasNext()) {
-            Projectile projectile = iterator.next();
-            for (Enemy enemy : enemies) {
-                if (enemy.intersects(projectile.boundingBox)) {
-                    enemy.movementSpeed = 0;
-                    enemy.setCurrentState(Enemy.State.DIED);
-                    iterator.remove();
-                }
-
-            }
-        }
-        for (Enemy enemy : enemies) {
-            if (enemy.intersects(player.boundingBox)) {
-                game.setScreen(new GameOverScreen(game, 0));
             }
         }
     }
@@ -156,20 +138,6 @@ class GameScreen implements Screen {
         }
     }
 
-    private void renderBackground(float delta) {
-        backgroundOffsets[0] += delta * backgroundMaxScrollSpeed / 8;
-        backgroundOffsets[1] += delta * backgroundMaxScrollSpeed / 4;
-        backgroundOffsets[2] += delta * backgroundMaxScrollSpeed / 2;
-        backgroundOffsets[3] += delta * backgroundMaxScrollSpeed;
-
-        for (int i = 0; i < backgroundOffsets.length; i++) {
-            if (backgroundOffsets[i] > WORLD_WIDTH) {
-                backgroundOffsets[i] = 0;
-            }
-            game.batch.draw(backgrounds[i], -backgroundOffsets[i], 0, WORLD_WIDTH, WORLD_HEIGHT);
-            game.batch.draw(backgrounds[i], -backgroundOffsets[i] + WORLD_WIDTH, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        }
-    }
 
     @Override
     public void resize(int width, int height) {
