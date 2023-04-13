@@ -42,7 +42,6 @@ public class Enemy extends Character {
     @Override
     public void update(float delta) {
         super.update(delta);
-
         //moves the enemy faster if they are not on screen
         if (boundingBox.x > 128) boundingBox.x -= ((int) (Math.random() * 10) + 1) * delta;
         else boundingBox.x -= speed * delta;

@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -26,7 +27,7 @@ class GameScreen implements Screen {
 
     //characters
     private Player player;
-    private Enemy enemy;
+    private Enemy[] enemies = new Enemy[2];
 
     //projectiles
     private LinkedList<Projectile> playerProjectileList;
@@ -44,7 +45,9 @@ class GameScreen implements Screen {
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
         player = new Player(40, 10, 10, WORLD_WIDTH / 8, WORLD_HEIGHT / 4, 0.5f);
-        enemy = new Enemy(40, 10, 10, WORLD_WIDTH / 2, WORLD_HEIGHT / 4, 0.5f);
+        for (int i = 0; i < enemies.length; i++) {
+            enemies[i] = new Enemy(2, 10, 10, WORLD_WIDTH / 2, WORLD_HEIGHT / 4, 0.5f);
+        }
         playerProjectileList = new LinkedList<>();
     }
 
@@ -52,16 +55,23 @@ class GameScreen implements Screen {
     public void render(float delta) {
         game.batch.begin();
         detectInput(delta);
+        player.update(delta);
+
         renderBackground(delta);
 
-        enemy.update(delta);
-        enemy.draw(game.batch);
+        for (Enemy enemy : enemies) {
+            enemy.update(delta);
+        }
 
 
-        player.update(delta);
         player.draw(game.batch);
 
+        for (Enemy enemy : enemies) {
+            enemy.draw(game.batch);
+        }
+
         renderProjectiles(delta);
+        detectCollisions();
         game.batch.end();
     }
 
@@ -119,12 +129,27 @@ class GameScreen implements Screen {
         }
     }
 
+    private void detectCollisions() {
+        for (Projectile projectile : playerProjectileList) {
+            for (Enemy enemy : enemies) {
+                if (enemy.intersects(projectile.boundingBox)) {
+                    enemy.speed = 0;
+                    enemy.setCurrentState(Enemy.State.DIED);
+                    System.out.println("died");
+                }
+            }
+        }
+
+        for (Enemy enemy : enemies) {
+            if (enemy.intersects(player.boundingBox)) {
+                System.out.println("player collided with enemy");
+            }
+        }
+    }
+
     private void renderProjectiles(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && player.canShoot()) {
-            Projectile[] projectiles = player.fireProjectiles();
-            for (Projectile projectile : projectiles) {
-                playerProjectileList.add(projectile);
-            }
+            Collections.addAll(playerProjectileList, player.fireProjectiles());
         }
 
         ListIterator<Projectile> iterator = playerProjectileList.listIterator();
@@ -137,7 +162,6 @@ class GameScreen implements Screen {
             }
         }
     }
-
 
     @Override
     public void resize(int width, int height) {

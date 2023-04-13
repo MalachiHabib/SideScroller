@@ -19,7 +19,6 @@ public class Projectile {
     }
 
     public void draw(Batch batch) {
-        System.out.println(boundingBox.x > WORLD_WIDTH);
         batch.draw(textureRegion, boundingBox.x - boundingBox.width / 2, boundingBox.y, boundingBox.width, boundingBox.height);
     }
 }
