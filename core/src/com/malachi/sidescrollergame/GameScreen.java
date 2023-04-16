@@ -134,15 +134,15 @@ class GameScreen implements Screen {
             for (Enemy enemy : enemies) {
                 if (enemy.intersects(projectile.boundingBox)) {
                     enemy.speed = 0;
-                    enemy.setCurrentState(Enemy.State.DIED);
-                    System.out.println("died");
+                    enemy.setCurrentState(Character.State.DIED);
                 }
             }
         }
 
         for (Enemy enemy : enemies) {
-            if (enemy.intersects(player.boundingBox)) {
-                System.out.println("player collided with enemy");
+            if (enemy.intersects(player.boundingBox) && (enemy.getState() != Enemy.State.DIED)) {
+                player.setCurrentState(Character.State.DIED);
+                //add game over screen or something
             }
         }
     }

@@ -6,21 +6,12 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Enemy extends Character {
-
-    public enum State {
-        IDLE,
-        MOVING,
-        DIED
-    }
-
     private State state;
-    private Animation<TextureRegion> idleAnimation, movingAnimation, dieAnimation;
     private float stateTime;
     private TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
 
     public Enemy(float movementSpeed, float width, float height,
-                 float posX, float posY, float timeBetweenShots)
-                 {
+                 float posX, float posY, float timeBetweenShots) {
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
 
         dieAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Destroyed"), Animation.PlayMode.LOOP);
@@ -38,6 +29,11 @@ public class Enemy extends Character {
         }
         state = newState;
     }
+
+    public State getState() {
+        return state;
+    }
+
 
     @Override
     public void update(float delta) {
@@ -75,7 +71,7 @@ public class Enemy extends Character {
 
     @Override
     public Projectile[] fireProjectiles() {
-        TextureRegion playerProjectileTextureRegion =  enemyAtlas.findRegion("skeleton-Idle");
+        TextureRegion playerProjectileTextureRegion = enemyAtlas.findRegion("skeleton-Idle");
         Projectile[] projectiles = new Projectile[1];
         projectiles[0] = new Projectile(boundingBox.x + 8f, boundingBox.y, 1, 4, 10, playerProjectileTextureRegion);
         timeSinceLastShot = 0;

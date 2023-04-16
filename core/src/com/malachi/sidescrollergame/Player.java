@@ -13,22 +13,47 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class Player extends Character {
-    private Animation<TextureRegion> idleAnimation;
+    private State state;
     private float stateTime;
-    private TextureAtlas playerAtlas = new TextureAtlas("playerIdleAnimation.atlas");
+    private TextureAtlas playerAtlas = new TextureAtlas("playerAtlas.atlas");
 
     public Player(float movementSpeed, float width, float height,
                   float posX, float posY, float timeBetweenShots) {
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
         idleAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-MovingNIdle"), Animation.PlayMode.LOOP);
+        dieAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-Destroy"), Animation.PlayMode.LOOP);
         stateTime = 0;
+
+        state = State.IDLE;
+    }
+
+
+    public void setCurrentState(State newState) {
+        if (state != newState) {
+            stateTime = 0;
+        }
+        state = newState;
+    }
+
+    public State getState() {
+        return state;
     }
 
     @Override
-    public void update(float deltaTime) {
-        super.update(deltaTime);
-        stateTime += deltaTime;
-        characterTexture = idleAnimation.getKeyFrame(stateTime);
+    public void update(float delta) {
+        super.update(delta);
+        stateTime += delta;
+
+        Animation<TextureRegion> currentAnimation;
+        switch (state) {
+            case DIED:
+                currentAnimation = dieAnimation;
+                break;
+            default:
+                currentAnimation = idleAnimation;
+                break;
+        }
+        characterTexture = currentAnimation.getKeyFrame(stateTime);
     }
 
     @Override
