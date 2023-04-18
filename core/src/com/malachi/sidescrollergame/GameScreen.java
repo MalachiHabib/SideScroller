@@ -10,32 +10,24 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.ListIterator;
+import java.util.List;
+
 
 class GameScreen implements Screen {
     public static final int WORLD_WIDTH = 128;
     public static final int WORLD_HEIGHT = 72;
-    private final float TOUCH_THRESHOLD = 5f;
-    private SideScrollerGame game;
-    private Camera camera;
-    private Viewport viewport;
-    private Texture[] backgrounds;
-    private float[] bgOffsets = {0, 0, 0, 0};
-    private float bgSpeed;
+    private final Camera camera;
+    private final Viewport viewport;
+    private final Texture[] backgrounds;
+    private final float[] bgOffsets = {0, 0, 0, 0};
+    private final float bgSpeed;
 
-    //characters
-    private Player player;
-    private Enemy[] enemies = new Enemy[2];
 
-    //projectiles
-    private LinkedList<Projectile> playerProjectileList;
+    private final Player player;
+    private final Enemy[] enemies = new Enemy[2];
 
-    public GameScreen(SideScrollerGame game) {
-        this.game = game;
+    public GameScreen() {
         camera = new OrthographicCamera();
-
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         backgrounds = new Texture[4];
         backgrounds[0] = new Texture("Layer1.png");
@@ -44,16 +36,17 @@ class GameScreen implements Screen {
         backgrounds[3] = new Texture("Layer4.png");
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
-        player = new Player(40, 10, 10, WORLD_WIDTH / 8, WORLD_HEIGHT / 4, 0.5f);
+        player = new Player(40, 10, 10, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 4, 0.5f);
+
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new Enemy(2, 10, 10, WORLD_WIDTH / 2, WORLD_HEIGHT / 4, 0.5f);
+            enemies[i] = new Enemy(2, 10, 10,  (float) WORLD_WIDTH / 2, (float) WORLD_HEIGHT / 4, 0.5f);
         }
-        playerProjectileList = new LinkedList<>();
+
     }
 
     @Override
     public void render(float delta) {
-        game.batch.begin();
+        SideScrollerGame.batch.begin();
         detectInput(delta);
         player.update(delta);
 
@@ -63,17 +56,17 @@ class GameScreen implements Screen {
             enemy.update(delta);
         }
 
-
-        player.draw(game.batch);
+        player.draw(SideScrollerGame.batch);
 
         for (Enemy enemy : enemies) {
-            enemy.draw(game.batch);
+            enemy.draw(SideScrollerGame.batch);
         }
 
         renderProjectiles(delta);
         detectCollisions();
-        game.batch.end();
+        SideScrollerGame.batch.end();
     }
+
 
     private void renderBackground(float delta) {
         bgOffsets[0] += delta * bgSpeed / 8;
@@ -85,15 +78,15 @@ class GameScreen implements Screen {
             if (bgOffsets[i] > WORLD_WIDTH) {
                 bgOffsets[i] = 0;
             }
-            game.batch.draw(backgrounds[i], -bgOffsets[i], 0, WORLD_WIDTH, WORLD_HEIGHT);
-            game.batch.draw(backgrounds[i], -bgOffsets[i] + WORLD_WIDTH, 0, WORLD_WIDTH, WORLD_HEIGHT);
+            SideScrollerGame.batch.draw(backgrounds[i], -bgOffsets[i], 0, WORLD_WIDTH, WORLD_HEIGHT);
+            SideScrollerGame.batch.draw(backgrounds[i], -bgOffsets[i] + WORLD_WIDTH, 0, WORLD_WIDTH, WORLD_HEIGHT);
         }
     }
 
     private void detectInput(float delta) {
         float leftBoundary = -player.boundingBox.x;
         float bottomBoundary = -player.boundingBox.y;
-        float rightBoundary = WORLD_WIDTH * 2 / 3 - player.boundingBox.x - player.boundingBox.width;
+        float rightBoundary = (float) WORLD_WIDTH * 2 / 3 - player.boundingBox.x - player.boundingBox.width;
         float topBoundary = WORLD_HEIGHT - player.boundingBox.y - player.boundingBox.height;
 
         float xMovement = 0f, yMovement = 0f;
@@ -113,6 +106,7 @@ class GameScreen implements Screen {
             Vector2 touchPosition = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
             Vector2 playerCenter = new Vector2(player.boundingBox.x + player.boundingBox.width / 2, player.boundingBox.y + player.boundingBox.height / 2);
 
+            float TOUCH_THRESHOLD = 5f;
             if (touchPosition.dst(playerCenter) > TOUCH_THRESHOLD) {
                 float xTouchDifference = touchPosition.x - playerCenter.x;
                 float yTouchDifference = touchPosition.y - playerCenter.y;
@@ -129,8 +123,22 @@ class GameScreen implements Screen {
         }
     }
 
+    private void renderProjectiles(float delta) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && player.canShoot()) {
+            player.addNewProjectile(); // Use addNewProjectile method instead of fireProjectiles
+        }
+
+        player.updateProjectiles(delta); // Update projectiles outside of the condition
+
+        // Render and remove out-of-bounds projectiles
+        player.renderProjectiles(SideScrollerGame.batch);
+        player.removeOutOfBoundsProjectiles(WORLD_WIDTH);
+    }
+
     private void detectCollisions() {
-        for (Projectile projectile : playerProjectileList) {
+        List<Projectile> projectiles = player.getProjectiles();
+
+        for (Projectile projectile : projectiles) {
             for (Enemy enemy : enemies) {
                 if (enemy.intersects(projectile.boundingBox)) {
                     enemy.speed = 0;
@@ -147,26 +155,11 @@ class GameScreen implements Screen {
         }
     }
 
-    private void renderProjectiles(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && player.canShoot()) {
-            Collections.addAll(playerProjectileList, player.fireProjectiles());
-        }
-
-        ListIterator<Projectile> iterator = playerProjectileList.listIterator();
-        while (iterator.hasNext()) {
-            Projectile projectile = iterator.next();
-            projectile.draw(game.batch);
-            projectile.boundingBox.x += projectile.movementSpeed * delta;
-            if (projectile.boundingBox.x > WORLD_WIDTH) {
-                iterator.remove();
-            }
-        }
-    }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        game.batch.setProjectionMatrix(camera.combined);
+        SideScrollerGame.batch.setProjectionMatrix(camera.combined);
     }
 
     @Override

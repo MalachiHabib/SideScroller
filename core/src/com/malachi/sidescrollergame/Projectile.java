@@ -19,6 +19,7 @@ public class Projectile {
     }
 
     public void draw(Batch batch) {
+        System.out.print(textureRegion);
         batch.draw(textureRegion, boundingBox.x - boundingBox.width / 2, boundingBox.y, boundingBox.width, boundingBox.height);
     }
 }

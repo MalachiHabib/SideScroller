@@ -1,14 +1,13 @@
 package com.malachi.sidescrollergame;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Enemy extends Character {
     private State state;
     private float stateTime;
-    private TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
+    private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
 
     public Enemy(float movementSpeed, float width, float height,
                  float posX, float posY, float timeBetweenShots) {
@@ -25,7 +24,7 @@ public class Enemy extends Character {
 
     public void setCurrentState(State newState) {
         if (state != newState) {
-            stateTime = 0; // Reset the state time when the state changes
+            stateTime = 0;
         }
         state = newState;
     }
@@ -67,14 +66,5 @@ public class Enemy extends Character {
                 break;
         }
         characterTexture = currentAnimation.getKeyFrame(stateTime);
-    }
-
-    @Override
-    public Projectile[] fireProjectiles() {
-        TextureRegion playerProjectileTextureRegion = enemyAtlas.findRegion("skeleton-Idle");
-        Projectile[] projectiles = new Projectile[1];
-        projectiles[0] = new Projectile(boundingBox.x + 8f, boundingBox.y, 1, 4, 10, playerProjectileTextureRegion);
-        timeSinceLastShot = 0;
-        return projectiles;
     }
 }

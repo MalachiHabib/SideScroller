@@ -15,7 +15,7 @@ public class SideScrollerGame extends Game {
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
-		gameScreen = new GameScreen(this);
+		gameScreen = new GameScreen();
 		setScreen(gameScreen);
 	}
 
