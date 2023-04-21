@@ -1,5 +1,6 @@
 package com.malachi.sidescrollergame;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -20,7 +21,8 @@ class GameScreen implements Screen {
     private final Viewport viewport;
     private final Texture[] backgrounds;
     private final float[] bgOffsets = {0, 0, 0, 0};
-    private final float bgSpeed;
+    private float bgSpeed;
+    private float accelerationRate = .1f;
 
 
     private final Player player;
@@ -39,7 +41,7 @@ class GameScreen implements Screen {
         player = new Player(40, 10, 10, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 4, 0.5f);
 
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new Enemy(2, 10, 10,  (float) WORLD_WIDTH / 2, (float) WORLD_HEIGHT / 4, 0.5f);
+            enemies[i] = new Enemy(20, 10, 10, (float) WORLD_WIDTH * 1 * (i + 1), (float) WORLD_HEIGHT / (float) (2 + (Math.random() * (9 - 2))), 0.5f);
         }
 
     }
@@ -69,6 +71,9 @@ class GameScreen implements Screen {
 
 
     private void renderBackground(float delta) {
+        //Make the background progressively faster the more time goes on
+        bgSpeed += delta * accelerationRate;
+
         bgOffsets[0] += delta * bgSpeed / 8;
         bgOffsets[1] += delta * bgSpeed / 4;
         bgOffsets[2] += delta * bgSpeed / 2;
@@ -124,15 +129,10 @@ class GameScreen implements Screen {
     }
 
     private void renderProjectiles(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && player.canShoot()) {
-            player.addNewProjectile(); // Use addNewProjectile method instead of fireProjectiles
+        player.fireProjectile(delta);
+        for (Enemy enemy : enemies) {
+            enemy.fireProjectile(delta);
         }
-
-        player.updateProjectiles(delta); // Update projectiles outside of the condition
-
-        // Render and remove out-of-bounds projectiles
-        player.renderProjectiles(SideScrollerGame.batch);
-        player.removeOutOfBoundsProjectiles(WORLD_WIDTH);
     }
 
     private void detectCollisions() {

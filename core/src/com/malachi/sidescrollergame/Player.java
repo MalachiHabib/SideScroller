@@ -1,5 +1,9 @@
 package com.malachi.sidescrollergame;
 
+import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -23,6 +27,7 @@ public class Player extends Character {
         idleAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-MovingNIdle"), Animation.PlayMode.LOOP);
         dieAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-Destroy"), Animation.PlayMode.LOOP);
         stateTime = 0;
+
         projectiles = new ArrayList<>();
         state = State.IDLE;
     }
@@ -59,6 +64,16 @@ public class Player extends Character {
         characterTexture = currentAnimation.getKeyFrame(stateTime);
     }
 
+    @Override
+    public void fireProjectile(float delta) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && canShoot()) {
+            addNewProjectile();
+        }
+        updateProjectiles(delta);
+        renderProjectiles(SideScrollerGame.batch);
+        removeOutOfBoundsProjectiles(WORLD_WIDTH);
+    }
+
     public void updateProjectiles(float delta) {
         for (Projectile projectile : projectiles) {
             projectile.boundingBox.x += projectile.movementSpeed * delta;
@@ -87,6 +102,5 @@ public class Player extends Character {
             }
         }
     }
-
 }
 
