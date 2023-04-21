@@ -99,8 +99,8 @@ public class Enemy extends Character {
         if (boundingBox.x > 128) boundingBox.x -= ((int) (Math.random() * 10) + 1) * delta;
         else boundingBox.x -= speed * delta;
         if (boundingBox.x < 0)
-            //when the enemies dies, change their x to be a random number between 100 and 200
-            translate(boundingBox.x + (float) (100 + Math.random() * 100), randomY);
+            //when the enemies dies, change their x to be a random number between 150 and 250
+            translate(boundingBox.x + (float) (150 + Math.random() * 100), randomY);
 
         stateTime += delta;
 

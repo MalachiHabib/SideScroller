@@ -87,7 +87,7 @@ public class Player extends Character {
 
     public void addNewProjectile() {
         TextureRegion playerProjectileTextureRegion = playerAtlas.findRegion("skeleton-MovingNIdle");
-        Projectile projectile = new Projectile(boundingBox.x + 8f, boundingBox.y, 10, 4, 10, playerProjectileTextureRegion);
+        Projectile projectile = new Projectile(boundingBox.x + 8f, boundingBox.y, 10, 4, 60, playerProjectileTextureRegion);
         timeSinceLastShot = 0;
         projectiles.add(projectile);
     }

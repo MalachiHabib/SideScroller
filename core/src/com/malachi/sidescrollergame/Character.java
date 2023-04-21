@@ -20,7 +20,6 @@ abstract class Character {
     float timeBetweenShots;
     float timeSinceLastShot = 0;
     TextureRegion characterTexture;
-    private State state;
 
     public Character(float movementSpeed, float width, float height,
                      float posX, float posY,
@@ -34,8 +33,6 @@ abstract class Character {
     public abstract void fireProjectile(boolean pressedShoot, float delta);
 
     public abstract void setCurrentState(State newState);
-
-    public abstract State getState();
 
     public void update(float delta) {
         timeSinceLastShot += delta;

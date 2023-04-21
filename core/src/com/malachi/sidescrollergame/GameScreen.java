@@ -18,6 +18,7 @@ import java.util.List;
 class GameScreen implements Screen {
     public static final int WORLD_WIDTH = 128;
     public static final int WORLD_HEIGHT = 72;
+    public SideScrollerGame game;
     private final Camera camera;
     private final Viewport viewport;
     private final Texture[] backgrounds;
@@ -30,7 +31,8 @@ class GameScreen implements Screen {
     private final Player player;
     private final Enemy[] enemies = new Enemy[2];
 
-    public GameScreen() {
+    public GameScreen(SideScrollerGame game) {
+        this.game = game;
         camera = new OrthographicCamera();
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         backgrounds = new Texture[4];
@@ -40,13 +42,13 @@ class GameScreen implements Screen {
         backgrounds[3] = new Texture("Layer4.png");
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
-        player = new Player(40, 10, 10, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 4, .5f);
+        player = new Player(40, 13, 11, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, .5f);
 
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new Enemy(20, 10, 10, (float) WORLD_WIDTH * 1 * (i + 1), (float) WORLD_HEIGHT / (float) (2 + (Math.random() * (9 - 2))), 8f);
+            enemies[i] = new Enemy(20, 13, 11, (float) WORLD_WIDTH * 1 * (i + 2), (float) WORLD_HEIGHT / (float) (2 + (Math.random() * (9 - 2))), 8f);
         }
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController = new OnScreenController();
         }
 
@@ -68,15 +70,14 @@ class GameScreen implements Screen {
         }
 
         if (player.getState() != Character.State.DIED) {
-            score += delta;
-            System.out.println((int) score * 10);
+            score += delta * 10;
         }
 
         renderProjectiles(delta);
         detectCollisions();
         SideScrollerGame.batch.end();
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController.render(SideScrollerGame.batch);
         }
 
@@ -103,12 +104,12 @@ class GameScreen implements Screen {
     private void detectInput(float delta) {
         float leftBoundary = -player.boundingBox.x;
         float bottomBoundary = -player.boundingBox.y;
-        float rightBoundary = (float) WORLD_WIDTH * 2 / 3 - player.boundingBox.x - player.boundingBox.width;
+        float rightBoundary = (float) WORLD_WIDTH / 2 - player.boundingBox.x - player.boundingBox.width;
         float topBoundary = WORLD_HEIGHT - player.boundingBox.y - player.boundingBox.height;
 
         float xMovement = 0f, yMovement = 0f;
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController.update(viewport);
             Vector2 movement = onScreenController.getPlayerControlInput(delta, player);
             xMovement = movement.x;
@@ -131,7 +132,7 @@ class GameScreen implements Screen {
     }
 
     private void renderProjectiles(float delta) {
-            player.fireProjectile(onScreenController.pressedShoot(), delta);
+        player.fireProjectile(onScreenController.pressedShoot(), delta);
 
         for (Enemy enemy : enemies) {
             enemy.fireProjectile(onScreenController.pressedShoot(), delta);
@@ -144,6 +145,7 @@ class GameScreen implements Screen {
         for (Projectile projectile : projectiles) {
             for (Enemy enemy : enemies) {
                 if (enemy.intersects(projectile.boundingBox)) {
+                    score += 100;
                     enemy.speed = 0;
                     enemy.setCurrentState(Character.State.DIED);
                 }
@@ -153,7 +155,7 @@ class GameScreen implements Screen {
         for (Enemy enemy : enemies) {
             if (enemy.intersects(player.boundingBox) && (enemy.getState() != Enemy.State.DIED)) {
                 player.setCurrentState(Character.State.DIED);
-                //add game over screen or something
+                game.setScreen(new GameOverScreen(game, (int) score));
             }
         }
     }

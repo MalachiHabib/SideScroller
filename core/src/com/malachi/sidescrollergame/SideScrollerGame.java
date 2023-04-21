@@ -9,19 +9,19 @@ import java.util.Random;
 public class SideScrollerGame extends Game {
 
 	public static SpriteBatch batch;
-	public GameScreen gameScreen;
+	public StartScreen startScreen;
 	public static Random random = new Random();
 
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
-		gameScreen = new GameScreen();
-		setScreen(gameScreen);
+		startScreen = new StartScreen(this);
+		setScreen(startScreen);
 	}
 
 	@Override
 	public void dispose() {
-		gameScreen.dispose();
+		startScreen.dispose();
 	}
 
 	@Override
@@ -31,6 +31,6 @@ public class SideScrollerGame extends Game {
 
 	@Override
 	public void resize(int width, int height) {
-		gameScreen.resize(width, height);
+		startScreen.resize(width, height);
 	}
 }
