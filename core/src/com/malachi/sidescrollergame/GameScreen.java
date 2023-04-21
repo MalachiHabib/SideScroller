@@ -1,10 +1,11 @@
 package com.malachi.sidescrollergame;
 
-import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
@@ -23,7 +24,8 @@ class GameScreen implements Screen {
     private final float[] bgOffsets = {0, 0, 0, 0};
     private float bgSpeed;
     private float accelerationRate = .1f;
-
+    private OnScreenController onScreenController;
+    float score = 0;
 
     private final Player player;
     private final Enemy[] enemies = new Enemy[2];
@@ -38,37 +40,47 @@ class GameScreen implements Screen {
         backgrounds[3] = new Texture("Layer4.png");
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
-        player = new Player(40, 10, 10, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 4, 0.5f);
+        player = new Player(40, 10, 10, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 4, .5f);
 
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new Enemy(20, 10, 10, (float) WORLD_WIDTH * 1 * (i + 1), (float) WORLD_HEIGHT / (float) (2 + (Math.random() * (9 - 2))), 0.5f);
+            enemies[i] = new Enemy(20, 10, 10, (float) WORLD_WIDTH * 1 * (i + 1), (float) WORLD_HEIGHT / (float) (2 + (Math.random() * (9 - 2))), 8f);
+        }
+
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            onScreenController = new OnScreenController();
         }
 
     }
 
     @Override
     public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         SideScrollerGame.batch.begin();
+        renderBackground(delta);
         detectInput(delta);
         player.update(delta);
-
-        renderBackground(delta);
-
-        for (Enemy enemy : enemies) {
-            enemy.update(delta);
-        }
-
         player.draw(SideScrollerGame.batch);
 
         for (Enemy enemy : enemies) {
+            enemy.update(delta);
             enemy.draw(SideScrollerGame.batch);
+        }
+
+        if (player.getState() != Character.State.DIED) {
+            score += delta;
+            System.out.println((int) score * 10);
         }
 
         renderProjectiles(delta);
         detectCollisions();
         SideScrollerGame.batch.end();
-    }
 
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            onScreenController.render(SideScrollerGame.batch);
+        }
+
+    }
 
     private void renderBackground(float delta) {
         //Make the background progressively faster the more time goes on
@@ -96,42 +108,33 @@ class GameScreen implements Screen {
 
         float xMovement = 0f, yMovement = 0f;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
-            xMovement = Math.min(player.speed * delta, rightBoundary);
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
-            xMovement = Math.max(-player.speed * delta, leftBoundary);
-        if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W))
-            yMovement = Math.min(player.speed * delta, topBoundary);
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))
-            yMovement = Math.max(-player.speed * delta, bottomBoundary);
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            onScreenController.update(viewport);
+            Vector2 movement = onScreenController.getPlayerControlInput(delta, player);
+            xMovement = movement.x;
+            yMovement = movement.y;
+        } else {
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
+                xMovement = player.speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
+                xMovement = -player.speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W))
+                yMovement = player.speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))
+                yMovement = -player.speed * delta;
+        }
+
+        xMovement = (xMovement > 0) ? Math.min(xMovement, rightBoundary) : Math.max(xMovement, leftBoundary);
+        yMovement = (yMovement > 0) ? Math.min(yMovement, topBoundary) : Math.max(yMovement, bottomBoundary);
 
         player.translate(xMovement, yMovement);
-
-        if (Gdx.input.isTouched()) {
-            Vector2 touchPosition = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            Vector2 playerCenter = new Vector2(player.boundingBox.x + player.boundingBox.width / 2, player.boundingBox.y + player.boundingBox.height / 2);
-
-            float TOUCH_THRESHOLD = 5f;
-            if (touchPosition.dst(playerCenter) > TOUCH_THRESHOLD) {
-                float xTouchDifference = touchPosition.x - playerCenter.x;
-                float yTouchDifference = touchPosition.y - playerCenter.y;
-                float distance = touchPosition.dst(playerCenter);
-
-                float touchXMovement = xTouchDifference / distance * player.speed * delta;
-                float touchYMovement = yTouchDifference / distance * player.speed * delta;
-
-                touchXMovement = (touchXMovement > 0) ? Math.min(touchXMovement, rightBoundary) : Math.max(touchXMovement, leftBoundary);
-                touchYMovement = (touchYMovement > 0) ? Math.min(touchYMovement, topBoundary) : Math.max(touchYMovement, bottomBoundary);
-
-                player.translate(touchXMovement, touchYMovement);
-            }
-        }
     }
 
     private void renderProjectiles(float delta) {
-        player.fireProjectile(delta);
+            player.fireProjectile(onScreenController.pressedShoot(), delta);
+
         for (Enemy enemy : enemies) {
-            enemy.fireProjectile(delta);
+            enemy.fireProjectile(onScreenController.pressedShoot(), delta);
         }
     }
 

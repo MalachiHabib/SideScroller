@@ -27,7 +27,6 @@ public class Player extends Character {
         idleAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-MovingNIdle"), Animation.PlayMode.LOOP);
         dieAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-Destroy"), Animation.PlayMode.LOOP);
         stateTime = 0;
-
         projectiles = new ArrayList<>();
         state = State.IDLE;
     }
@@ -65,8 +64,8 @@ public class Player extends Character {
     }
 
     @Override
-    public void fireProjectile(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && canShoot()) {
+    public void fireProjectile(boolean pressedShoot, float delta) {
+        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || pressedShoot) && canShoot()) {
             addNewProjectile();
         }
         updateProjectiles(delta);

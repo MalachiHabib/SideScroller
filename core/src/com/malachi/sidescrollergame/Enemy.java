@@ -19,6 +19,11 @@ public class Enemy extends Character {
     private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
     private final List<Projectile> projectiles;
 
+    float minY = -boundingBox.y;
+    float maxY = GameScreen.WORLD_HEIGHT - boundingBox.y - boundingBox.height;
+    // Generate a random float value between minY and maxY
+    float randomY = minY + SideScrollerGame.random.nextFloat() * (maxY - minY);
+
     public Enemy(float movementSpeed, float width, float height,
                  float posX, float posY, float timeBetweenShots) {
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
@@ -45,7 +50,7 @@ public class Enemy extends Character {
     }
 
     @Override
-    public void fireProjectile(float delta) {
+    public void fireProjectile(boolean pressedShoot, float delta) {
         //TODO: MAKE IT RANDOM INTERVAL OR SOMETHING
         timeSinceLastShot += delta;
 
@@ -72,7 +77,7 @@ public class Enemy extends Character {
 
     public void addNewProjectile() {
         TextureRegion playerProjectileTextureRegion = enemyAtlas.findRegion("skeleton-Destroyed");
-        Projectile projectile = new Projectile(boundingBox.x - 8f, boundingBox.y, 10, 4, 10, playerProjectileTextureRegion);
+        Projectile projectile = new Projectile(boundingBox.x - 1f, boundingBox.y, 10, 4, speed * 1.5f, playerProjectileTextureRegion);
         timeSinceLastShot = 0;
         projectiles.add(projectile);
     }
@@ -93,6 +98,9 @@ public class Enemy extends Character {
         //moves the enemy faster if they are not on screen
         if (boundingBox.x > 128) boundingBox.x -= ((int) (Math.random() * 10) + 1) * delta;
         else boundingBox.x -= speed * delta;
+        if (boundingBox.x < 0)
+            //when the enemies dies, change their x to be a random number between 100 and 200
+            translate(boundingBox.x + (float) (100 + Math.random() * 100), randomY);
 
         stateTime += delta;
 
@@ -104,14 +112,9 @@ public class Enemy extends Character {
             case DIED:
                 currentAnimation = dieAnimation;
                 if (dieAnimation.isAnimationFinished(stateTime)) {
-                    float minY = -boundingBox.y;
-                    float maxY = GameScreen.WORLD_HEIGHT - boundingBox.y - boundingBox.height;
-                    // Generate a random float value between minY and maxY
-                    float randomY = minY + SideScrollerGame.random.nextFloat() * (maxY - minY);
-
                     setCurrentState(State.MOVING);
-                    speed = 20;
-                    translate(boundingBox.x + 80f, randomY);
+                    //when the enemies dies, change their x to be a random number between 150 and 300
+                    translate(boundingBox.x + (float) (150 + Math.random() * 150), randomY);
                 }
                 break;
             default:
