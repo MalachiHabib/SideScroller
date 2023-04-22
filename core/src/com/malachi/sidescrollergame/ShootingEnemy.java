@@ -9,15 +9,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class EnemyOne extends Enemy {
+public class ShootingEnemy extends Enemy {
     private State state;
     private float stateTime;
     private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
 
-    public EnemyOne(float movementSpeed, float width, float height,
-                 float posX, float posY, float timeBetweenShots){
+    public ShootingEnemy(float movementSpeed, float width, float height,
+                         float posX, float posY, float timeBetweenShots){
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
         stateTime = 0;
         projectiles = new ArrayList<>();
@@ -67,10 +67,6 @@ public class EnemyOne extends Enemy {
         state = newState;
     }
 
-    public State getState() {
-        return state;
-    }
-
     public void fireProjectile(float delta) {
         //TODO: MAKE IT RANDOM INTERVAL OR SOMETHING
         timeSinceLastShot += delta;
@@ -92,10 +88,6 @@ public class EnemyOne extends Enemy {
         }
     }
 
-
-    public List<Projectile> getProjectiles() {
-        return projectiles;
-    }
 
     public void renderProjectiles(SpriteBatch batch) {
         for (Projectile projectile : projectiles) {

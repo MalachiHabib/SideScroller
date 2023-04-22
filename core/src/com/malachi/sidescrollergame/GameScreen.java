@@ -30,7 +30,7 @@ class GameScreen implements Screen {
     private boolean deathAnimationFinished = false;
 
     private final Player player;
-    private final EnemyOne[] enemies = new EnemyOne[2];
+    private final WigglyEnemy[] enemies = new WigglyEnemy[2];
 
     public GameScreen(SideScrollerGame game) {
         this.game = game;
@@ -46,7 +46,7 @@ class GameScreen implements Screen {
         player = new Player(40, 13, 13, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, 1f);
 
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new EnemyOne(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i,  (int) (Math.random() * 53 + 10), 8f);
+            enemies[i] = new WigglyEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i,  (int) (Math.random() * 53 + 10), 8f);
         }
 
         if (Gdx.app.getType() == Application.ApplicationType.Android) {
@@ -132,6 +132,7 @@ class GameScreen implements Screen {
     }
 
     private void renderProjectiles(float delta) {
+        //TODO: enemies all shoot at same time maybe change that
         for (Enemy enemy : enemies) {
             enemy.fireProjectile(delta);
         }

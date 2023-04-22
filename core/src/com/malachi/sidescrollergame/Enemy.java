@@ -28,7 +28,7 @@ public abstract class Enemy extends Character {
         return state;
     }
 
-    // Projectiles
+
     public List<Projectile> getProjectiles() {
         return projectiles;
     }
