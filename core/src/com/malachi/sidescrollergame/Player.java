@@ -17,7 +17,7 @@ public class Player extends Character {
     private State state;
     private float stateTime;
     private final TextureAtlas playerAtlas = new TextureAtlas("playerAtlas.atlas");
-    boolean pressedShoot;
+    private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     //projectiles
     private final List<Projectile> projectiles;
 
@@ -29,6 +29,11 @@ public class Player extends Character {
         stateTime = 0;
         projectiles = new ArrayList<>();
         state = State.IDLE;
+    }
+
+    @Override
+    public void translate(float xChange, float yChange) {
+        boundingBox.setPosition(boundingBox.x + xChange, boundingBox.y + yChange);
     }
 
     public List<Projectile> getProjectiles() {
@@ -44,6 +49,10 @@ public class Player extends Character {
 
     public State getState() {
         return state;
+    }
+
+    public boolean isAnimationFinished() {
+        return dieAnimation.isAnimationFinished(stateTime);
     }
 
     @Override
@@ -76,8 +85,7 @@ public class Player extends Character {
     }
 
     public void addNewProjectile() {
-        TextureRegion playerProjectileTextureRegion = playerAtlas.findRegion("skeleton-MovingNIdle");
-        Projectile projectile = new Projectile(boundingBox.x + 8f, boundingBox.y, 10, 4, 60, playerProjectileTextureRegion);
+        Projectile projectile = new Projectile(boundingBox.x + 11f, boundingBox.y + .5f, 6, 2, speed * 2.5f, projectileAtlas.findRegion("04"));
         timeSinceLastShot = 0;
         projectiles.add(projectile);
     }

@@ -1,5 +1,6 @@
 package com.malachi.sidescrollergame;
 
+import static com.malachi.sidescrollergame.GameScreen.WORLD_HEIGHT;
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 
 import com.badlogic.gdx.Gdx;
@@ -17,10 +18,11 @@ public class Enemy extends Character {
     private State state;
     private float stateTime;
     private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
+    private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
 
     float minY = -boundingBox.y;
-    float maxY = GameScreen.WORLD_HEIGHT - boundingBox.y - boundingBox.height;
+    float maxY = WORLD_HEIGHT - boundingBox.y - boundingBox.height;
     // Generate a random float value between minY and maxY
     float randomY = minY + SideScrollerGame.random.nextFloat() * (maxY - minY);
 
@@ -64,8 +66,15 @@ public class Enemy extends Character {
 
     public void updateProjectiles(float delta) {
         for (Projectile projectile : projectiles) {
-            projectile.boundingBox.x -= projectile.movementSpeed * delta;
+//            projectile.boundingBox.x = boundingBox.x + 1f; // Update the projectile's x position based on the enemy's x position
+//            projectile.boundingBox.y = boundingBox.y + 3.5f; // Update the projectile's y position based on the enemy's y position (optional)
+            projectile.boundingBox.x -= projectile.movementSpeed * delta; // Move the projectile to the left
         }
+    }
+
+
+    public List<Projectile> getProjectiles() {
+        return projectiles;
     }
 
     public void renderProjectiles(SpriteBatch batch) {
@@ -75,8 +84,11 @@ public class Enemy extends Character {
     }
 
     public void addNewProjectile() {
-        TextureRegion playerProjectileTextureRegion = enemyAtlas.findRegion("skeleton-Destroyed");
-        Projectile projectile = new Projectile(boundingBox.x - 1f, boundingBox.y, 10, 4, speed * 1.5f, playerProjectileTextureRegion);
+        TextureAtlas.AtlasRegion originalRegion = projectileAtlas.findRegion("11");
+        TextureRegion flippedProjectileRegion = new TextureRegion(originalRegion);
+        flippedProjectileRegion.flip(true, false);
+
+        Projectile projectile = new Projectile(boundingBox.x + 1f, boundingBox.y + 5f, 4f, 1.5f, speed * 3f, flippedProjectileRegion);
         timeSinceLastShot = 0;
         projectiles.add(projectile);
     }
@@ -92,16 +104,21 @@ public class Enemy extends Character {
     }
 
     @Override
+    public void translate(float xChange, float yChange) {
+        boundingBox.setPosition(boundingBox.x + xChange, yChange);
+    }
+
+    @Override
     public void update(float delta) {
         super.update(delta);
-        //moves the enemy faster if they are not on screen
-        if (boundingBox.x > 128) boundingBox.x -= ((int) (Math.random() * 10) + 1) * delta;
-        else boundingBox.x -= speed * delta;
-        if (boundingBox.x < 0)
-            //when the enemies dies, change their x to be a random number between 150 and 250
-            translate(boundingBox.x + (float) (150 + Math.random() * 100), randomY);
-
+        System.out.println(boundingBox.y);
+        boundingBox.x -= speed * delta;
         stateTime += delta;
+
+        if (boundingBox.x < 0) {
+            // Translate the enemy to just beyond the world width
+            translate(WORLD_WIDTH + (float) (Math.random() * 10), (int) (Math.random() * 43 + 15));
+        }
 
         Animation<TextureRegion> currentAnimation;
         switch (state) {
@@ -111,9 +128,9 @@ public class Enemy extends Character {
             case DIED:
                 currentAnimation = dieAnimation;
                 if (dieAnimation.isAnimationFinished(stateTime)) {
+                    speed = 30;
                     setCurrentState(State.MOVING);
-                    //when the enemies dies, change their x to be a random number between 150 and 300
-                    translate(boundingBox.x + (float) (150 + Math.random() * 150), randomY);
+                    translate(WORLD_WIDTH - boundingBox.x + (float) (Math.random() * 40), (int) (Math.random() * 43 + 15));
                 }
                 break;
             default:
@@ -123,3 +140,4 @@ public class Enemy extends Character {
         characterTexture = currentAnimation.getKeyFrame(stateTime);
     }
 }
+

@@ -44,9 +44,7 @@ abstract class Character {
         return boundingBox.overlaps(rectangle);
     }
 
-    public void translate(float xChange, float yChange) {
-        boundingBox.setPosition(boundingBox.x + xChange, boundingBox.y + yChange);
-    }
+    public abstract void translate(float xChange, float yChange);
 
     public void draw(Batch batch) {
         batch.draw(characterTexture, boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height);
