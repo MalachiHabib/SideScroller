@@ -1,54 +1,36 @@
 package com.malachi.sidescrollergame;
 
-import static com.malachi.sidescrollergame.GameScreen.WORLD_HEIGHT;
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
-
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class Enemy extends Character {
+public abstract class Enemy extends Character {
     private State state;
-    private float stateTime;
-    private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
-    private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
-
-    float minY = -boundingBox.y;
-    float maxY = WORLD_HEIGHT - boundingBox.y - boundingBox.height;
-    // Generate a random float value between minY and maxY
-    float randomY = minY + SideScrollerGame.random.nextFloat() * (maxY - minY);
 
     public Enemy(float movementSpeed, float width, float height,
                  float posX, float posY, float timeBetweenShots) {
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
-
-        dieAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Destroyed"), Animation.PlayMode.LOOP);
-        movingAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Moving"), Animation.PlayMode.LOOP);
-        idleAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Idle"), Animation.PlayMode.LOOP);
-        stateTime = 0;
-
         projectiles = new ArrayList<>();
-        // moving is default state for enemies in this game
         state = State.MOVING;
     }
 
+    // State management
     public void setCurrentState(State newState) {
-        if (state != newState) {
-            stateTime = 0;
-        }
         state = newState;
     }
 
     public State getState() {
         return state;
+    }
+
+    // Projectiles
+    public List<Projectile> getProjectiles() {
+        return projectiles;
     }
 
     public void fireProjectile(float delta) {
@@ -66,15 +48,8 @@ public class Enemy extends Character {
 
     public void updateProjectiles(float delta) {
         for (Projectile projectile : projectiles) {
-//            projectile.boundingBox.x = boundingBox.x + 1f; // Update the projectile's x position based on the enemy's x position
-//            projectile.boundingBox.y = boundingBox.y + 3.5f; // Update the projectile's y position based on the enemy's y position (optional)
             projectile.boundingBox.x -= projectile.movementSpeed * delta; // Move the projectile to the left
         }
-    }
-
-
-    public List<Projectile> getProjectiles() {
-        return projectiles;
     }
 
     public void renderProjectiles(SpriteBatch batch) {
@@ -84,7 +59,7 @@ public class Enemy extends Character {
     }
 
     public void addNewProjectile() {
-        TextureAtlas.AtlasRegion originalRegion = projectileAtlas.findRegion("11");
+        TextureRegion originalRegion = new TextureRegion(new Texture("projectiles/11.png"));
         TextureRegion flippedProjectileRegion = new TextureRegion(originalRegion);
         flippedProjectileRegion.flip(true, false);
 
@@ -103,41 +78,9 @@ public class Enemy extends Character {
         }
     }
 
+    // Movement
     @Override
     public void translate(float xChange, float yChange) {
         boundingBox.setPosition(boundingBox.x + xChange, yChange);
     }
-
-    @Override
-    public void update(float delta) {
-        super.update(delta);
-        System.out.println(boundingBox.y);
-        boundingBox.x -= speed * delta;
-        stateTime += delta;
-
-        if (boundingBox.x < 0) {
-            // Translate the enemy to just beyond the world width
-            translate(WORLD_WIDTH + (float) (Math.random() * 10), (int) (Math.random() * 43 + 15));
-        }
-
-        Animation<TextureRegion> currentAnimation;
-        switch (state) {
-            case IDLE:
-                currentAnimation = idleAnimation;
-                break;
-            case DIED:
-                currentAnimation = dieAnimation;
-                if (dieAnimation.isAnimationFinished(stateTime)) {
-                    speed = 30;
-                    setCurrentState(State.MOVING);
-                    translate(WORLD_WIDTH - boundingBox.x + (float) (Math.random() * 40), (int) (Math.random() * 43 + 15));
-                }
-                break;
-            default:
-                currentAnimation = movingAnimation;
-                break;
-        }
-        characterTexture = currentAnimation.getKeyFrame(stateTime);
-    }
 }
-
