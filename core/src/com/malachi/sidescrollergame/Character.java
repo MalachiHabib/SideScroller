@@ -30,8 +30,6 @@ abstract class Character {
         this.timeBetweenShots = timeBetweenShots;
     }
 
-    public abstract void fireProjectile(boolean pressedShoot, float delta);
-
     public abstract void setCurrentState(State newState);
 
     public void update(float delta) {

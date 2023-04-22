@@ -49,8 +49,7 @@ public class Enemy extends Character {
         return state;
     }
 
-    @Override
-    public void fireProjectile(boolean pressedShoot, float delta) {
+    public void fireProjectile(float delta) {
         //TODO: MAKE IT RANDOM INTERVAL OR SOMETHING
         timeSinceLastShot += delta;
 

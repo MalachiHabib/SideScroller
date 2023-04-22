@@ -17,7 +17,7 @@ public class Player extends Character {
     private State state;
     private float stateTime;
     private final TextureAtlas playerAtlas = new TextureAtlas("playerAtlas.atlas");
-
+    boolean pressedShoot;
     //projectiles
     private final List<Projectile> projectiles;
 
@@ -61,16 +61,6 @@ public class Player extends Character {
                 break;
         }
         characterTexture = currentAnimation.getKeyFrame(stateTime);
-    }
-
-    @Override
-    public void fireProjectile(boolean pressedShoot, float delta) {
-        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || pressedShoot) && canShoot()) {
-            addNewProjectile();
-        }
-        updateProjectiles(delta);
-        renderProjectiles(SideScrollerGame.batch);
-        removeOutOfBoundsProjectiles(WORLD_WIDTH);
     }
 
     public void updateProjectiles(float delta) {

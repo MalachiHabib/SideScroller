@@ -42,7 +42,7 @@ class GameScreen implements Screen {
         backgrounds[3] = new Texture("Layer4.png");
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
-        player = new Player(40, 13, 11, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, .5f);
+        player = new Player(40, 13, 11, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, 1f);
 
         for (int i = 0; i < enemies.length; i++) {
             enemies[i] = new Enemy(20, 13, 11, (float) WORLD_WIDTH * 1 * (i + 2), (float) WORLD_HEIGHT / (float) (2 + (Math.random() * (9 - 2))), 8f);
@@ -132,11 +132,22 @@ class GameScreen implements Screen {
     }
 
     private void renderProjectiles(float delta) {
-        player.fireProjectile(onScreenController.pressedShoot(), delta);
-
         for (Enemy enemy : enemies) {
-            enemy.fireProjectile(onScreenController.pressedShoot(), delta);
+            enemy.fireProjectile(delta);
         }
+
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
+            if (onScreenController.pressedShoot() && player.canShoot()) {
+                player.addNewProjectile();
+            }
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE) && player.canShoot()) {
+            player.addNewProjectile();
+        }
+
+        player.updateProjectiles(delta);
+        player.renderProjectiles(SideScrollerGame.batch);
+        player.removeOutOfBoundsProjectiles(WORLD_WIDTH);
     }
 
     private void detectCollisions() {
