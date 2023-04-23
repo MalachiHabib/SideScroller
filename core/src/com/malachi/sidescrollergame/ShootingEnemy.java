@@ -1,6 +1,8 @@
 package com.malachi.sidescrollergame;
 
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
+
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -67,6 +69,11 @@ public class ShootingEnemy extends Enemy {
         state = newState;
     }
 
+
+    public List<Projectile> getProjectiles() {
+        return projectiles;
+    }
+
     public void fireProjectile(float delta) {
         //TODO: MAKE IT RANDOM INTERVAL OR SOMETHING
         timeSinceLastShot += delta;
@@ -82,12 +89,9 @@ public class ShootingEnemy extends Enemy {
 
     public void updateProjectiles(float delta) {
         for (Projectile projectile : projectiles) {
-//            projectile.boundingBox.x = boundingBox.x + 1f; // Update the projectile's x position based on the enemy's x position
-//            projectile.boundingBox.y = boundingBox.y + 3.5f; // Update the projectile's y position based on the enemy's y position (optional)
             projectile.boundingBox.x -= projectile.movementSpeed * delta; // Move the projectile to the left
         }
     }
-
 
     public void renderProjectiles(SpriteBatch batch) {
         for (Projectile projectile : projectiles) {
@@ -96,11 +100,10 @@ public class ShootingEnemy extends Enemy {
     }
 
     public void addNewProjectile() {
-        TextureAtlas.AtlasRegion originalRegion = projectileAtlas.findRegion("11");
-        TextureRegion flippedProjectileRegion = new TextureRegion(originalRegion);
-        flippedProjectileRegion.flip(true, false);
+        TextureRegion projectileTexture = projectileAtlas.findRegion("11");
+        projectileTexture.flip(true, false);
 
-        Projectile projectile = new Projectile(boundingBox.x + 1f, boundingBox.y + 5f, 4f, 1.5f, speed * 3f, flippedProjectileRegion);
+        Projectile projectile = new Projectile(boundingBox.x + 1f, boundingBox.y + 5f, 4f, 1.5f, speed * 3f, projectileTexture);
         timeSinceLastShot = 0;
         projectiles.add(projectile);
     }
@@ -114,6 +117,7 @@ public class ShootingEnemy extends Enemy {
             }
         }
     }
+
 
     @Override
     public void translate(float xChange, float yChange) {

@@ -11,11 +11,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class OnScreenController {
     public boolean up, down, left, right, shoot;
-
+    private SpriteBatch batch;
     private Texture upButtonTexture, downButtonTexture, leftButtonTexture, rightButtonTexture, shootButtonTexture;
     private Rectangle upButtonBounds, downButtonBounds, leftButtonBounds, rightButtonBounds, shootButtonBounds;
 
-    public OnScreenController() {
+    public OnScreenController(SpriteBatch batch) {
+        this.batch = batch;
         // Initialize the button textures
         upButtonTexture = new Texture("gray_tile.png");
         downButtonTexture = new Texture("gray_tile.png");
@@ -32,15 +33,14 @@ public class OnScreenController {
         shootButtonBounds = new Rectangle(50, 5, buttonSize, buttonSize);
     }
 
-    public void render(SpriteBatch batch) {
+    public void render() {
+        System.out.print("rendered");
         // Draw the buttons
-        batch.begin();
         batch.draw(upButtonTexture, upButtonBounds.getX(), upButtonBounds.getY(), upButtonBounds.getWidth(), upButtonBounds.getHeight());
         batch.draw(downButtonTexture, downButtonBounds.getX(), downButtonBounds.getY(), downButtonBounds.getWidth(), downButtonBounds.getHeight());
         batch.draw(leftButtonTexture, leftButtonBounds.getX(), leftButtonBounds.getY(), leftButtonBounds.getWidth(), leftButtonBounds.getHeight());
         batch.draw(rightButtonTexture, rightButtonBounds.getX(), rightButtonBounds.getY(), rightButtonBounds.getWidth(), rightButtonBounds.getHeight());
         batch.draw(shootButtonTexture, shootButtonBounds.getX(), shootButtonBounds.getY(), shootButtonBounds.getWidth(), shootButtonBounds.getHeight());
-        batch.end();
     }
 
     public Vector2 getPlayerControlInput(float delta, Player player) {

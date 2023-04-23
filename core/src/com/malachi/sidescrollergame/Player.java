@@ -1,13 +1,17 @@
 package com.malachi.sidescrollergame;
 
+import static com.malachi.sidescrollergame.GameScreen.WORLD_HEIGHT;
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -98,6 +102,35 @@ public class Player extends Character {
                 iterator.remove();
             }
         }
+    }
+
+    public void detectInput(float delta, OnScreenController onScreenController, Viewport viewport) {
+        float leftBoundary = -boundingBox.x;
+        float bottomBoundary = -boundingBox.y;
+        float rightBoundary = (float) WORLD_WIDTH / 2 - boundingBox.x - boundingBox.width;
+        float topBoundary = WORLD_HEIGHT - boundingBox.y - boundingBox.height;
+
+        float xMovement = 0f, yMovement = 0f;
+
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            Vector2 movement = onScreenController.getPlayerControlInput(delta, this);
+            xMovement = movement.x;
+            yMovement = movement.y;
+        } else {
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
+                xMovement = speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
+                xMovement = -speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W))
+                yMovement = speed * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))
+                yMovement = -speed * delta;
+        }
+
+        xMovement = (xMovement > 0) ? Math.min(xMovement, rightBoundary) : Math.max(xMovement, leftBoundary);
+        yMovement = (yMovement > 0) ? Math.min(yMovement, topBoundary) : Math.max(yMovement, bottomBoundary);
+
+        translate(xMovement, yMovement);
     }
 }
 

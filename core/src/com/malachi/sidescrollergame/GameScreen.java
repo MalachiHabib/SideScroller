@@ -14,7 +14,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.List;
 
-
 class GameScreen implements Screen {
     public static final int WORLD_WIDTH = 128;
     public static final int WORLD_HEIGHT = 72;
@@ -30,7 +29,9 @@ class GameScreen implements Screen {
     private boolean deathAnimationFinished = false;
 
     private final Player player;
-    private final WigglyEnemy[] enemies = new WigglyEnemy[2];
+
+    //enemies
+    private final Enemy[] enemies = new Enemy[10];
 
     public GameScreen(SideScrollerGame game) {
         this.game = game;
@@ -46,41 +47,43 @@ class GameScreen implements Screen {
         player = new Player(40, 13, 13, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, 1f);
 
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new WigglyEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i,  (int) (Math.random() * 53 + 10), 8f);
+            enemies[i] = new ShootingEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i, (int) (Math.random() * 53 + 10), 8f);
         }
 
-        if (Gdx.app.getType() == Application.ApplicationType.Android) {
-            onScreenController = new OnScreenController();
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            onScreenController = new OnScreenController(SideScrollerGame.batch);
         }
     }
 
     @Override
     public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        SideScrollerGame.batch.begin();
 
-        if (Gdx.app.getType() == Application.ApplicationType.Android) {
-            onScreenController.render(SideScrollerGame.batch);
+        renderBackground(delta);
+        player.detectInput(delta, onScreenController, viewport);
+        player.update(delta);
+        player.draw(SideScrollerGame.batch);
+
+        for (Enemy enemy : enemies) {
+            enemy.update(delta);
+            enemy.draw(SideScrollerGame.batch);
         }
-            Gdx.gl.glClearColor(0, 0, 0, 1);
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-            SideScrollerGame.batch.begin();
-            renderBackground(delta);
-            detectInput(delta);
-            player.update(delta);
-            player.draw(SideScrollerGame.batch);
 
-            for (Enemy enemy : enemies) {
-                enemy.update(delta);
-                enemy.draw(SideScrollerGame.batch);
-            }
+        if (player.getState() != Character.State.DIED) {
+            score += delta * 10;
+        }
 
-            if (player.getState() != Character.State.DIED) {
-                score += delta * 10;
-            }
+        renderProjectiles(delta);
+        detectCollisions();
 
-            renderProjectiles(delta);
-            detectCollisions();
-            SideScrollerGame.batch.end();
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            onScreenController.update(viewport);
+            onScreenController.render();
+        }
 
+        SideScrollerGame.batch.end();
     }
 
     private void renderBackground(float delta) {
@@ -101,43 +104,16 @@ class GameScreen implements Screen {
         }
     }
 
-    private void detectInput(float delta) {
-        float leftBoundary = -player.boundingBox.x;
-        float bottomBoundary = -player.boundingBox.y;
-        float rightBoundary = (float) WORLD_WIDTH / 2 - player.boundingBox.x - player.boundingBox.width;
-        float topBoundary = WORLD_HEIGHT - player.boundingBox.y - player.boundingBox.height;
-
-        float xMovement = 0f, yMovement = 0f;
-
-        if (Gdx.app.getType() == Application.ApplicationType.Android) {
-            onScreenController.update(viewport);
-            Vector2 movement = onScreenController.getPlayerControlInput(delta, player);
-            xMovement = movement.x;
-            yMovement = movement.y;
-        } else {
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
-                xMovement = player.speed * delta;
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
-                xMovement = -player.speed * delta;
-            if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W))
-                yMovement = player.speed * delta;
-            if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))
-                yMovement = -player.speed * delta;
-        }
-
-        xMovement = (xMovement > 0) ? Math.min(xMovement, rightBoundary) : Math.max(xMovement, leftBoundary);
-        yMovement = (yMovement > 0) ? Math.min(yMovement, topBoundary) : Math.max(yMovement, bottomBoundary);
-
-        player.translate(xMovement, yMovement);
-    }
-
     private void renderProjectiles(float delta) {
         //TODO: enemies all shoot at same time maybe change that
         for (Enemy enemy : enemies) {
-            enemy.fireProjectile(delta);
+            if (enemy instanceof ShootingEnemy) {
+                ShootingEnemy shootingEnemy = (ShootingEnemy) enemy;
+                shootingEnemy.fireProjectile(delta);
+            }
         }
 
-        if (Gdx.app.getType() == Application.ApplicationType.Android) {
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
             if (onScreenController.pressedShoot() && player.canShoot()) {
                 player.addNewProjectile();
             }
@@ -153,7 +129,6 @@ class GameScreen implements Screen {
 
     private void detectCollisions() {
         List<Projectile> playerProjectiles = player.getProjectiles();
-        List<Projectile> enemyProjectiles;
 
         // Player projectiles colliding with enemies
         for (Projectile projectile : playerProjectiles) {
@@ -168,12 +143,15 @@ class GameScreen implements Screen {
 
         // Enemy projectiles colliding with the player
         for (Enemy enemy : enemies) {
-            enemyProjectiles = enemy.getProjectiles();
-            for (Projectile projectile : enemyProjectiles) {
-                if (player.intersects(projectile.boundingBox)) {
-                    if (!deathAnimationFinished) {
-                        player.setCurrentState(Character.State.DIED);
-                        player.update(Gdx.graphics.getDeltaTime()); // Update the player's death animation
+            if (enemy instanceof ShootingEnemy) {
+                ShootingEnemy shootingEnemy = (ShootingEnemy) enemy;
+                List<Projectile> shootingEnemyProjectiles = shootingEnemy.getProjectiles();
+                for (Projectile projectile : shootingEnemyProjectiles) {
+                    if (player.intersects(projectile.boundingBox)) {
+                        if (!deathAnimationFinished) {
+                            player.setCurrentState(Character.State.DIED);
+                            player.update(Gdx.graphics.getDeltaTime()); // Update the player's death animation
+                        }
                     }
                 }
             }

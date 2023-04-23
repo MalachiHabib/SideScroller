@@ -15,18 +15,15 @@ import java.util.List;
 public class WigglyEnemy extends Enemy {
     private State state;
     private float stateTime;
-    private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
+    private final TextureAtlas enemyAtlas = new TextureAtlas("wigglyEnemy.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
 
-    private int randomChangeCounter = 0;
-    private final int randomChangeInterval = 20; // The number of updates before changing random values
-    private float currentFrequencyOffset = 0;
-    private float currentAmplitudeOffset = 0;
-    private float targetFrequencyOffset = 0;
-    private float targetAmplitudeOffset = 0;
-    private float lerpFactor = 0.1f;
-
+    //movement for wave formation
+    float wavelength = WORLD_WIDTH / 4;
+    float frequency = (2 * (float) Math.PI) / wavelength;
+    float amplitude = WORLD_HEIGHT * 0.15f;
+    float yOffset = WORLD_HEIGHT / 2;
 
     public WigglyEnemy(float movementSpeed, float width, float height,
                        float posX, float posY, float timeBetweenShots) {
@@ -50,32 +47,12 @@ public class WigglyEnemy extends Enemy {
     @Override
     public void update(float delta) {
         super.update(delta);
-        System.out.println(boundingBox.y);
         boundingBox.x -= speed * delta;
-
-        // Fixed frequency and amplitude values
-        float frequency = 0.1f;
-        float amplitude = WORLD_HEIGHT * 0.15f;
-        float yOffset = WORLD_HEIGHT / 2;
-
-        // Update random values and apply linear interpolation
-        if (randomChangeCounter == 0) {
-            targetFrequencyOffset = (float) (Math.random() * 0.05 - 0.025);
-            targetAmplitudeOffset = (float) (Math.random() * 0.1 - 0.05) * WORLD_HEIGHT;
-        }
-
-        currentFrequencyOffset += (targetFrequencyOffset - currentFrequencyOffset) * lerpFactor;
-        currentAmplitudeOffset += (targetAmplitudeOffset - currentAmplitudeOffset) * lerpFactor;
-
-        // Sine wave logic for vertical movement with randomization and smooth transitions
-        float newY = (float) (Math.sin((boundingBox.x * (frequency + currentFrequencyOffset))) * (amplitude + currentAmplitudeOffset) + yOffset);
-        boundingBox.y = newY;
+        boundingBox.y = (float) (Math.sin(boundingBox.x * frequency) * amplitude + yOffset);
 
         stateTime += delta;
-        randomChangeCounter = (randomChangeCounter + 1) % randomChangeInterval;
-
+        // Translate the enemy to just beyond the world width
         if (boundingBox.x < 0) {
-            // Translate the enemy to just beyond the world width
             translate(WORLD_WIDTH + (float) (Math.random() * 10), (int) (Math.random() * 43 + 15));
         }
 
