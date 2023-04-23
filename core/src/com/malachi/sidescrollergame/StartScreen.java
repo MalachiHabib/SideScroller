@@ -31,13 +31,10 @@ public class StartScreen implements Screen {
 
     public StartScreen(SideScrollerGame game) {
         this.game = game;
-        SpriteBatch batch = game.batch;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage = new Stage();
         skin = new Skin(Gdx.files.internal("comic-ui.json"), new TextureAtlas(Gdx.files.internal("comic-ui.atlas")));
-        TextButton startButton = new TextButton("Start", skin);
-        TextButton quitButton = new TextButton("Quit", skin);
         stage = new Stage(new ScreenViewport());
     }
 
@@ -56,16 +53,16 @@ public class StartScreen implements Screen {
             Gdx.app.error("Error loading file", e.getMessage());
         }
 
-        // Create a new table for the title label
+        // table for title
         Table titleTable = new Table();
         titleTable.setSize(stage.getWidth(), stage.getHeight());
 
-        // Create the title label and add it to the table
+        // label for title table
         Label titleLabel = new Label("Side Scroller", skin);
         titleLabel.setFontScale(2f);
         titleTable.add(titleLabel).center().padTop(stage.getHeight() * -0.33f);
 
-        // Create a new table for the buttons
+        // table for buttons
         Table buttonTable = new Table();
         buttonTable.setSize(stage.getWidth(), stage.getHeight());
 
@@ -76,18 +73,16 @@ public class StartScreen implements Screen {
         buttonGroup.setFillParent(true);
         buttonTable.addActor(buttonGroup);
 
-        // Create buttons
         TextButton startButton = new TextButton("Play", skin);
         TextButton quitButton = new TextButton("Quit", skin);
 
-        // Set buttons size
         startButton.setSize(menuWidth, buttonHeight);
         quitButton.setSize(menuWidth, buttonHeight);
 
         buttonGroup.addActor(startButton);
         buttonGroup.addActor(quitButton);
 
-        // Add actions
+        // add buttons
         buttonTable.addAction(Actions.sequence(
                 Actions.alpha(0),
                 Actions.fadeIn(1f),
@@ -155,4 +150,3 @@ public class StartScreen implements Screen {
         stage.dispose();
     }
 }
-

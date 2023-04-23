@@ -33,7 +33,6 @@ public class ShootingEnemy extends Enemy {
     @Override
     public void update(float delta) {
         super.update(delta);
-        System.out.println(boundingBox.y);
         boundingBox.x -= speed * delta;
         stateTime += delta;
 

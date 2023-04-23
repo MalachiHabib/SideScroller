@@ -6,24 +6,26 @@ import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class Player extends Character {
-    private State state;
-    private float stateTime;
     private final TextureAtlas playerAtlas = new TextureAtlas("playerAtlas.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     //projectiles
     private final List<Projectile> projectiles;
+    private float dashDistance = 20f;
+    private float dashCooldown = 3f;
+    private float timeSinceLastDash = 0;
+    private State state;
+    private float stateTime;
 
     public Player(float movementSpeed, float width, float height,
                   float posX, float posY, float timeBetweenShots) {
@@ -32,7 +34,9 @@ public class Player extends Character {
         dieAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-Destroy"), Animation.PlayMode.LOOP);
         stateTime = 0;
         projectiles = new ArrayList<>();
+
         state = State.IDLE;
+
     }
 
     @Override
@@ -88,6 +92,16 @@ public class Player extends Character {
         }
     }
 
+    public boolean dashWithScreenShake(float xMovement, float yMovement) {
+        if (timeSinceLastDash >= dashCooldown) {
+            dash(xMovement, yMovement);
+            timeSinceLastDash = 0;
+            return true;
+        }
+        return false;
+    }
+
+
     public void addNewProjectile() {
         Projectile projectile = new Projectile(boundingBox.x + 11f, boundingBox.y + .5f, 6, 2, speed * 2.5f, projectileAtlas.findRegion("04"));
         timeSinceLastShot = 0;
@@ -104,7 +118,23 @@ public class Player extends Character {
         }
     }
 
-    public void detectInput(float delta, OnScreenController onScreenController, Viewport viewport) {
+    public void dash(float xMovement, float yMovement) {
+        if (timeSinceLastDash >= dashCooldown) {
+            float dashX = xMovement * dashDistance;
+            float dashY = yMovement * dashDistance;
+            float newX = boundingBox.x + dashX;
+            float newY = boundingBox.y + dashY;
+
+            // Check boundaries
+            newX = Math.min(Math.max(newX, 0), WORLD_WIDTH - boundingBox.width);
+            newY = Math.min(Math.max(newY, 0), WORLD_HEIGHT - boundingBox.height);
+
+            boundingBox.setPosition(newX, newY);
+            timeSinceLastDash = 0;
+        }
+    }
+
+    public boolean detectInput(float delta, OnScreenController onScreenController, ScreenShake screenShake) {
         float leftBoundary = -boundingBox.x;
         float bottomBoundary = -boundingBox.y;
         float rightBoundary = (float) WORLD_WIDTH / 2 - boundingBox.x - boundingBox.width;
@@ -112,7 +142,7 @@ public class Player extends Character {
 
         float xMovement = 0f, yMovement = 0f;
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             Vector2 movement = onScreenController.getPlayerControlInput(delta, this);
             xMovement = movement.x;
             yMovement = movement.y;
@@ -131,6 +161,17 @@ public class Player extends Character {
         yMovement = (yMovement > 0) ? Math.min(yMovement, topBoundary) : Math.max(yMovement, bottomBoundary);
 
         translate(xMovement, yMovement);
+
+        timeSinceLastDash += delta;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            if (Math.abs(xMovement) > 0 || Math.abs(yMovement) > 0) {
+                if (dashWithScreenShake(xMovement / (speed * delta), yMovement / (speed * delta))) {
+                    screenShake.reset();
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
-

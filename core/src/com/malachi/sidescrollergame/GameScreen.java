@@ -8,35 +8,41 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.List;
 
 class GameScreen implements Screen {
+
     public static final int WORLD_WIDTH = 128;
     public static final int WORLD_HEIGHT = 72;
-    public SideScrollerGame game;
     private final Camera camera;
     private final Viewport viewport;
     private final Texture[] backgrounds;
     private final float[] bgOffsets = {0, 0, 0, 0};
+    private final Player player;
+    private final Enemy[] enemies = new Enemy[1];
+    public SideScrollerGame game;
+    float ogCamPosX;
+    float ogCamPosY;
+    float score = 0;
+    private OnScreenController onScreenController;
+    private ScreenShake screenShake;
     private float bgSpeed;
     private float accelerationRate = .1f;
-    private OnScreenController onScreenController;
-    float score = 0;
     private boolean deathAnimationFinished = false;
-
-    private final Player player;
-
-    //enemies
-    private final Enemy[] enemies = new Enemy[10];
 
     public GameScreen(SideScrollerGame game) {
         this.game = game;
         camera = new OrthographicCamera();
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
+
+        ogCamPosX = camera.position.x;
+
+        ogCamPosY = camera.position.y;
+
+        System.out.println(camera.position);
         backgrounds = new Texture[4];
         backgrounds[0] = new Texture("Layer1.png");
         backgrounds[1] = new Texture("Layer2.png");
@@ -50,19 +56,36 @@ class GameScreen implements Screen {
             enemies[i] = new ShootingEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i, (int) (Math.random() * 53 + 10), 8f);
         }
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController = new OnScreenController(SideScrollerGame.batch);
         }
     }
 
     @Override
     public void render(float delta) {
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        //TODO: add no death in dash
+        screenShake.update(delta);
+        if (!screenShake.isFinished()) {
+            float shakeIntensity = screenShake.getShakeIntensity();
+            float shakeX = (float) (Math.random() * 2 - 1) * shakeIntensity;
+            float shakeY = (float) (Math.random() * 2 - 1) * shakeIntensity;
+
+            camera.position.set(camera.position.x + shakeX, camera.position.y + shakeY, 0);
+            camera.update();
+        }
+        camera.position.set(64, 36, 0);
+
+
+        // Set the SpriteBatch's projection matrix to the camera's combined matrix
+        SideScrollerGame.batch.setProjectionMatrix(camera.combined);
         SideScrollerGame.batch.begin();
 
         renderBackground(delta);
-        player.detectInput(delta, onScreenController, viewport);
+        player.detectInput(delta, onScreenController, screenShake);
         player.update(delta);
         player.draw(SideScrollerGame.batch);
 
@@ -78,13 +101,15 @@ class GameScreen implements Screen {
         renderProjectiles(delta);
         detectCollisions();
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController.update(viewport);
             onScreenController.render();
         }
 
         SideScrollerGame.batch.end();
+
     }
+
 
     private void renderBackground(float delta) {
         //Make the background progressively faster the more time goes on
@@ -113,7 +138,7 @@ class GameScreen implements Screen {
             }
         }
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
             if (onScreenController.pressedShoot() && player.canShoot()) {
                 player.addNewProjectile();
             }
@@ -200,7 +225,7 @@ class GameScreen implements Screen {
 
     @Override
     public void show() {
-
+        screenShake = new ScreenShake(0.25f, 5f);
     }
 
     @Override

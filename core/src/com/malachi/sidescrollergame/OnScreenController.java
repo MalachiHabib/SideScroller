@@ -34,7 +34,6 @@ public class OnScreenController {
     }
 
     public void render() {
-        System.out.print("rendered");
         // Draw the buttons
         batch.draw(upButtonTexture, upButtonBounds.getX(), upButtonBounds.getY(), upButtonBounds.getWidth(), upButtonBounds.getHeight());
         batch.draw(downButtonTexture, downButtonBounds.getX(), downButtonBounds.getY(), downButtonBounds.getWidth(), downButtonBounds.getHeight());
