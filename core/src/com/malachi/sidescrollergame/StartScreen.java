@@ -2,11 +2,8 @@ package com.malachi.sidescrollergame;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
@@ -23,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
 public class StartScreen implements Screen {
     private SideScrollerGame game;
     private OrthographicCamera camera;
@@ -43,24 +41,21 @@ public class StartScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         float menuWidth = stage.getWidth() / 3;
-        float buttonHeight = stage.getHeight() * 0.1f; // 10% of the screen height
+        float buttonHeight = stage.getHeight() * 0.1f;
 
-        try {
-            Texture backgroundTexture = new Texture("repeated.png");
-            Image background = new Image(backgroundTexture);
-            stage.addActor(background);
-        } catch (Exception e) {
-            Gdx.app.error("Error loading file", e.getMessage());
-        }
+        Texture backgroundTexture = new Texture("startscreen.png");
+        Image background = new Image(backgroundTexture);
+        background.setScale(.5f);
+        stage.addActor(background);
 
         // table for title
         Table titleTable = new Table();
         titleTable.setSize(stage.getWidth(), stage.getHeight());
 
         // label for title table
-        Label titleLabel = new Label("Side Scroller", skin);
-        titleLabel.setFontScale(2f);
-        titleTable.add(titleLabel).center().padTop(stage.getHeight() * -0.33f);
+        Texture nimbleNimbusLogoTexture = new Texture("NimbleNimbus.png");
+        Image nimbleNimbusLogo = new Image(nimbleNimbusLogoTexture);
+        titleTable.add(nimbleNimbusLogo).center().padTop(stage.getHeight() * -0.33f);
 
         // table for buttons
         Table buttonTable = new Table();

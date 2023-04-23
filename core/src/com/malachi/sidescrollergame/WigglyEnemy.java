@@ -4,26 +4,23 @@ import static com.malachi.sidescrollergame.GameScreen.WORLD_HEIGHT;
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class WigglyEnemy extends Enemy {
-    private State state;
-    private float stateTime;
-    private final TextureAtlas enemyAtlas = new TextureAtlas("wigglyEnemy.atlas");
-    private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
+    private final TextureAtlas enemyAtlas = new TextureAtlas("WigglyEnemy.atlas");
     private final List<Projectile> projectiles;
-
     //movement for wave formation
     float wavelength = WORLD_WIDTH / 4;
-    float frequency = (2 * (float) Math.PI) / wavelength;
+    float frequency = (2 * (float) Math.PI) / (wavelength * 2);
     float amplitude = WORLD_HEIGHT * 0.15f;
-    float yOffset = WORLD_HEIGHT / 2;
+    float yOffset;
+    private State state;
+    private float stateTime;
 
     public WigglyEnemy(float movementSpeed, float width, float height,
                        float posX, float posY, float timeBetweenShots) {
@@ -47,13 +44,14 @@ public class WigglyEnemy extends Enemy {
     @Override
     public void update(float delta) {
         super.update(delta);
+        yOffset = MathUtils.random(0, WORLD_HEIGHT);
         boundingBox.x -= speed * delta;
         boundingBox.y = (float) (Math.sin(boundingBox.x * frequency) * amplitude + yOffset);
 
         stateTime += delta;
         // Translate the enemy to just beyond the world width
-        if (boundingBox.x < 0) {
-            translate(WORLD_WIDTH + (float) (Math.random() * 10), (int) (Math.random() * 43 + 15));
+        if (boundingBox.x < -10f) {
+            translate(WORLD_WIDTH + (float) (20 + Math.random() * 25), (int) (Math.random() * 43 + 15));
         }
 
         Animation<TextureRegion> currentAnimation;
@@ -79,7 +77,8 @@ public class WigglyEnemy extends Enemy {
 
     @Override
     public void translate(float xChange, float yChange) {
+        yChange = MathUtils.random(0, WORLD_HEIGHT);
         boundingBox.setPosition(boundingBox.x + xChange, yChange);
+
     }
 }
-

@@ -5,8 +5,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class OnScreenController {
@@ -61,7 +59,6 @@ public class OnScreenController {
     }
 
     public void update(Viewport viewport) {
-        // Reset button states
         up = down = left = right = shoot = false;
 
         // Check if any of the buttons are being touched
@@ -85,13 +82,5 @@ public class OnScreenController {
                 shoot = true;
             }
         }
-    }
-
-    public void dispose() {
-        // Dispose the textures when no longer needed
-        upButtonTexture.dispose();
-        downButtonTexture.dispose();
-        leftButtonTexture.dispose();
-        rightButtonTexture.dispose();
     }
 }

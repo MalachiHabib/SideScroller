@@ -2,32 +2,29 @@ package com.malachi.sidescrollergame;
 
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class ShootingEnemy extends Enemy {
-    private State state;
-    private float stateTime;
     private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
 
+
     public ShootingEnemy(float movementSpeed, float width, float height,
-                         float posX, float posY, float timeBetweenShots){
+                         float posX, float posY, float timeBetweenShots) {
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
-        stateTime = 0;
         projectiles = new ArrayList<>();
         state = State.MOVING;
         dieAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Destroyed"), Animation.PlayMode.LOOP);
         movingAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Moving"), Animation.PlayMode.LOOP);
         idleAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Idle"), Animation.PlayMode.LOOP);
-
     }
 
     @Override
@@ -36,9 +33,8 @@ public class ShootingEnemy extends Enemy {
         boundingBox.x -= speed * delta;
         stateTime += delta;
 
-        if (boundingBox.x < 0) {
-            // Translate the enemy to just beyond the world width
-            translate(WORLD_WIDTH + (float) (Math.random() * 10), (int) (Math.random() * 43 + 15));
+        if (boundingBox.x < -10f) {
+            translate(WORLD_WIDTH + (float) (20 + Math.random() * 25), (int) (Math.random() * 43 + 15));
         }
 
         Animation<TextureRegion> currentAnimation;
@@ -59,13 +55,6 @@ public class ShootingEnemy extends Enemy {
                 break;
         }
         characterTexture = currentAnimation.getKeyFrame(stateTime);
-    }
-
-    public void setCurrentState(State newState) {
-        if (state != newState) {
-            stateTime = 0;
-        }
-        state = newState;
     }
 
 
@@ -116,11 +105,4 @@ public class ShootingEnemy extends Enemy {
             }
         }
     }
-
-
-    @Override
-    public void translate(float xChange, float yChange) {
-        boundingBox.setPosition(boundingBox.x + xChange, yChange);
-    }
 }
-

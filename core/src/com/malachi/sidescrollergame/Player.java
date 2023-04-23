@@ -19,10 +19,9 @@ import java.util.List;
 public class Player extends Character {
     private final TextureAtlas playerAtlas = new TextureAtlas("playerAtlas.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
-    //projectiles
     private final List<Projectile> projectiles;
-    private float dashDistance = 20f;
-    private float dashCooldown = 3f;
+    private float dashDistance = 15f;
+    private float dashCoolDown = 3f;
     private float timeSinceLastDash = 0;
     private State state;
     private float stateTime;
@@ -93,7 +92,7 @@ public class Player extends Character {
     }
 
     public boolean dashWithScreenShake(float xMovement, float yMovement) {
-        if (timeSinceLastDash >= dashCooldown) {
+        if (timeSinceLastDash >= dashCoolDown) {
             dash(xMovement, yMovement);
             timeSinceLastDash = 0;
             return true;
@@ -119,7 +118,7 @@ public class Player extends Character {
     }
 
     public void dash(float xMovement, float yMovement) {
-        if (timeSinceLastDash >= dashCooldown) {
+        if (timeSinceLastDash >= dashCoolDown) {
             float dashX = xMovement * dashDistance;
             float dashY = yMovement * dashDistance;
             float newX = boundingBox.x + dashX;
@@ -134,7 +133,7 @@ public class Player extends Character {
         }
     }
 
-    public boolean detectInput(float delta, OnScreenController onScreenController, ScreenShake screenShake) {
+    public void detectInput(float delta, OnScreenController onScreenController, ScreenShake screenShake) {
         float leftBoundary = -boundingBox.x;
         float bottomBoundary = -boundingBox.y;
         float rightBoundary = (float) WORLD_WIDTH / 2 - boundingBox.x - boundingBox.width;
@@ -168,10 +167,8 @@ public class Player extends Character {
             if (Math.abs(xMovement) > 0 || Math.abs(yMovement) > 0) {
                 if (dashWithScreenShake(xMovement / (speed * delta), yMovement / (speed * delta))) {
                     screenShake.reset();
-                    return true;
                 }
             }
         }
-        return false;
     }
 }

@@ -20,7 +20,7 @@ class GameScreen implements Screen {
     private final Camera camera;
     private final Viewport viewport;
     private final Texture[] backgrounds;
-    private final float[] bgOffsets = {0, 0, 0, 0};
+    private final float[] bgOffsets = {0, 0, 0, 0, 0};
     private final Player player;
     private final Enemy[] enemies = new Enemy[1];
     public SideScrollerGame game;
@@ -30,30 +30,28 @@ class GameScreen implements Screen {
     private OnScreenController onScreenController;
     private ScreenShake screenShake;
     private float bgSpeed;
-    private float accelerationRate = .1f;
-    private boolean deathAnimationFinished = false;
 
     public GameScreen(SideScrollerGame game) {
         this.game = game;
         camera = new OrthographicCamera();
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
-
         ogCamPosX = camera.position.x;
-
         ogCamPosY = camera.position.y;
 
-        System.out.println(camera.position);
-        backgrounds = new Texture[4];
-        backgrounds[0] = new Texture("Layer1.png");
-        backgrounds[1] = new Texture("Layer2.png");
-        backgrounds[2] = new Texture("Layer3.png");
-        backgrounds[3] = new Texture("Layer4.png");
+        backgrounds = new Texture[7];
+        backgrounds[0] = new Texture("backgrounds/sky.png");
+        backgrounds[1] = new Texture("backgrounds/rocks_1.png");
+        backgrounds[2] = new Texture("backgrounds/rocks_2.png");
+        backgrounds[3] = new Texture("backgrounds/clouds_1.png");
+        backgrounds[4] = new Texture("backgrounds/clouds_2.png");
+        backgrounds[5] = new Texture("backgrounds/clouds_3.png");
+        backgrounds[6] = new Texture("backgrounds/clouds_4.png");
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
         player = new Player(40, 13, 13, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, 1f);
 
         for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new ShootingEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i, (int) (Math.random() * 53 + 10), 8f);
+            enemies[i] = new WigglyEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i, (int) (Math.random() * 53 + 10), 8f);
         }
 
         if (Gdx.app.getType() == Application.ApplicationType.Android) {
@@ -63,11 +61,9 @@ class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        //TODO: add no death in dash
         screenShake.update(delta);
         if (!screenShake.isFinished()) {
             float shakeIntensity = screenShake.getShakeIntensity();
@@ -79,12 +75,18 @@ class GameScreen implements Screen {
         }
         camera.position.set(64, 36, 0);
 
-
-        // Set the SpriteBatch's projection matrix to the camera's combined matrix
         SideScrollerGame.batch.setProjectionMatrix(camera.combined);
         SideScrollerGame.batch.begin();
 
-        renderBackground(delta);
+        for (int i = 0; i <= 3; i++) {
+            bgOffsets[i] += delta * bgSpeed / (8 / (i + 1));
+            if (bgOffsets[i] > WORLD_WIDTH) {
+                bgOffsets[i] = 0;
+            }
+            SideScrollerGame.batch.draw(backgrounds[i], -bgOffsets[i], 0, WORLD_WIDTH, WORLD_HEIGHT);
+            SideScrollerGame.batch.draw(backgrounds[i], -bgOffsets[i] + WORLD_WIDTH, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        }
+
         player.detectInput(delta, onScreenController, screenShake);
         player.update(delta);
         player.draw(SideScrollerGame.batch);
@@ -101,32 +103,21 @@ class GameScreen implements Screen {
         renderProjectiles(delta);
         detectCollisions();
 
-        if (Gdx.app.getType() == Application.ApplicationType.Android) {
-            onScreenController.update(viewport);
-            onScreenController.render();
-        }
-
-        SideScrollerGame.batch.end();
-
-    }
-
-
-    private void renderBackground(float delta) {
-        //Make the background progressively faster the more time goes on
-        bgSpeed += delta * accelerationRate;
-
-        bgOffsets[0] += delta * bgSpeed / 8;
-        bgOffsets[1] += delta * bgSpeed / 4;
-        bgOffsets[2] += delta * bgSpeed / 2;
-        bgOffsets[3] += delta * bgSpeed;
-
-        for (int i = 0; i < bgOffsets.length; i++) {
+        for (int i = 4; i < bgOffsets.length; i++) {
+            bgOffsets[i] += delta * bgSpeed;
             if (bgOffsets[i] > WORLD_WIDTH) {
                 bgOffsets[i] = 0;
             }
             SideScrollerGame.batch.draw(backgrounds[i], -bgOffsets[i], 0, WORLD_WIDTH, WORLD_HEIGHT);
             SideScrollerGame.batch.draw(backgrounds[i], -bgOffsets[i] + WORLD_WIDTH, 0, WORLD_WIDTH, WORLD_HEIGHT);
         }
+
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
+            onScreenController.update(viewport);
+            onScreenController.render();
+        }
+
+        SideScrollerGame.batch.end();
     }
 
     private void renderProjectiles(float delta) {
@@ -173,9 +164,8 @@ class GameScreen implements Screen {
                 List<Projectile> shootingEnemyProjectiles = shootingEnemy.getProjectiles();
                 for (Projectile projectile : shootingEnemyProjectiles) {
                     if (player.intersects(projectile.boundingBox)) {
-                        if (!deathAnimationFinished) {
+                        if (player.isAnimationFinished()) {
                             player.setCurrentState(Character.State.DIED);
-                            player.update(Gdx.graphics.getDeltaTime()); // Update the player's death animation
                         }
                     }
                 }
@@ -184,18 +174,14 @@ class GameScreen implements Screen {
 
         // Enemies colliding with the player
         for (Enemy enemy : enemies) {
-            if (enemy.intersects(player.boundingBox) && (enemy.getState() != Enemy.State.DIED)) {
-                if (!deathAnimationFinished) {
-                    player.setCurrentState(Character.State.DIED);
-                    player.update(Gdx.graphics.getDeltaTime()); // Update the player's death animation
-                }
+            if (enemy.intersects(player.boundingBox) && (enemy.getState() != Character.State.DIED)) {
+                player.setCurrentState(Character.State.DIED);
+                player.update(Gdx.graphics.getDeltaTime()); // Update the player's death animation
             }
         }
 
         if (player.getState() == Character.State.DIED) {
-            if (!deathAnimationFinished && player.isAnimationFinished()) {
-                deathAnimationFinished = true;
-            } else if (deathAnimationFinished) {
+            if (player.isAnimationFinished()) {
                 game.setScreen(new GameOverScreen(game, (int) score));
             }
         }
