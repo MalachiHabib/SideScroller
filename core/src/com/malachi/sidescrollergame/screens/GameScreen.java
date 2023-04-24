@@ -6,9 +6,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.malachi.sidescrollergame.SideScrollerGame;
@@ -39,6 +44,8 @@ public class GameScreen implements Screen {
     private OnScreenController onScreenController;
     private ScreenShake screenShake;
     private float bgSpeed;
+    private boolean paused;
+    private Sprite grayOverlay;
 
     public GameScreen(SideScrollerGame game) {
         this.game = game;
@@ -55,6 +62,10 @@ public class GameScreen implements Screen {
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
         player = new Player(40, 13, 13, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, (float) (1 + Math.random() * 1.5));
+
+        grayOverlay = new Sprite(new Texture("Backgrounds/black.jpeg"));
+        grayOverlay.setSize(WORLD_WIDTH, WORLD_HEIGHT);
+        grayOverlay.setAlpha(0.5f);
 
         for (int i = 0; i < 4; i++) {
             float randomOffset = (float) (Math.random() * WORLD_WIDTH);
@@ -77,6 +88,14 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            togglePause();
+        }
+
+        if (paused) {
+            delta = 0;
+        }
 
         camera.update();
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -137,6 +156,10 @@ public class GameScreen implements Screen {
         if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController.update(viewport);
             onScreenController.render();
+        }
+
+        if (paused) {
+            grayOverlay.draw(SideScrollerGame.batch);
         }
 
         SideScrollerGame.batch.end();
@@ -212,6 +235,9 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void togglePause() {
+        paused = !paused;
+    }
 
     @Override
     public void resize(int width, int height) {
