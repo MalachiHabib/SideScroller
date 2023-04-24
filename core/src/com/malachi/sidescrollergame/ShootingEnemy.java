@@ -2,6 +2,8 @@ package com.malachi.sidescrollergame;
 
 import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -15,8 +17,8 @@ public class ShootingEnemy extends Enemy {
     private final TextureAtlas enemyAtlas = new TextureAtlas("enemyAtlas.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
-
-
+    private Sound fireSound, death;
+    private boolean hasPlayedDeathSound = false;
     public ShootingEnemy(float movementSpeed, float width, float height,
                          float posX, float posY, float timeBetweenShots) {
         super(movementSpeed, width, height, posX, posY, timeBetweenShots);
@@ -25,6 +27,8 @@ public class ShootingEnemy extends Enemy {
         dieAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Destroyed"), Animation.PlayMode.LOOP);
         movingAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Moving"), Animation.PlayMode.LOOP);
         idleAnimation = new Animation<TextureRegion>(0.1f, enemyAtlas.findRegions("skeleton-Idle"), Animation.PlayMode.LOOP);
+        fireSound = Gdx.audio.newSound(Gdx.files.internal("Sounds/flaunch.wav"));
+        death = Gdx.audio.newSound(Gdx.files.internal("Sounds/explosion01.wav"));
     }
 
     @Override
@@ -44,6 +48,10 @@ public class ShootingEnemy extends Enemy {
                 break;
             case DIED:
                 currentAnimation = dieAnimation;
+                if(!hasPlayedDeathSound) {
+                    death.play();
+                    hasPlayedDeathSound = true;
+                }
                 if (dieAnimation.isAnimationFinished(stateTime)) {
                     speed = 30;
                     setCurrentState(State.MOVING);
@@ -63,13 +71,12 @@ public class ShootingEnemy extends Enemy {
     }
 
     public void fireProjectile(float delta) {
-        //TODO: MAKE IT RANDOM INTERVAL OR SOMETHING
-        timeSinceLastShot += delta;
 
+        timeSinceLastShot += delta;
         if (timeSinceLastShot >= timeBetweenShots && canShoot() && state != State.DIED && boundingBox.x < WORLD_WIDTH) {
+            fireSound.play(0.2f);
             addNewProjectile();
         }
-
         updateProjectiles(delta);
         renderProjectiles(SideScrollerGame.batch);
         removeOutOfBoundsProjectiles();

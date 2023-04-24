@@ -4,10 +4,13 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -22,11 +25,11 @@ class GameScreen implements Screen {
     private final Texture[] backgrounds;
     private final float[] bgOffsets = {0, 0, 0, 0, 0};
     private final Player player;
-    private final Enemy[] enemies = new Enemy[1];
+    private final Enemy[] enemies = new Enemy[4];
     public SideScrollerGame game;
     float ogCamPosX;
     float ogCamPosY;
-    float score = 0;
+    private Music backgroundMusic;
     private OnScreenController onScreenController;
     private ScreenShake screenShake;
     private float bgSpeed;
@@ -48,11 +51,21 @@ class GameScreen implements Screen {
         backgrounds[6] = new Texture("backgrounds/clouds_4.png");
 
         bgSpeed = (float) WORLD_HEIGHT / 4;
-        player = new Player(40, 13, 13, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, 1f);
+        player = new Player(40, 13, 13, (float) WORLD_WIDTH / 8, (float) WORLD_HEIGHT / 2, (float) (1 + Math.random() * 1.5));
 
-        for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = new StalkerEnemy(35, 13, 13, WORLD_WIDTH + (WORLD_WIDTH / 2f) * i, (int) (Math.random() * 53 + 10), 8f, player);
+        for (int i = 0; i < 4; i++) {
+            float randomOffset = (float) (Math.random() * WORLD_WIDTH / 4);
+            float xPos = WORLD_WIDTH + WORLD_WIDTH / 2 * ((i % 2) + 1) + randomOffset;
+            float yPos = (int) (Math.random() * 53 + 10);
+
+            if (i < 2) {
+                enemies[i] = new ShootingEnemy(35, 13, 13, xPos, yPos, 8f);
+            } else {
+                enemies[i] = new StalkerEnemy(35, 13, 13, xPos, yPos, player);
+            }
+
         }
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("Sounds/main.wav"));
 
         if (Gdx.app.getType() == Application.ApplicationType.Android) {
             onScreenController = new OnScreenController(SideScrollerGame.batch);
@@ -97,7 +110,7 @@ class GameScreen implements Screen {
         }
 
         if (player.getState() != Character.State.DIED) {
-            score += delta * 10;
+            player.score += delta * 10;
         }
 
         renderProjectiles(delta);
@@ -150,7 +163,7 @@ class GameScreen implements Screen {
         for (Projectile projectile : playerProjectiles) {
             for (Enemy enemy : enemies) {
                 if (enemy.intersects(projectile.boundingBox)) {
-                    score += 100;
+                    player.score += 100;
                     enemy.speed = 0;
                     enemy.setCurrentState(Character.State.DIED);
                 }
@@ -182,7 +195,8 @@ class GameScreen implements Screen {
 
         if (player.getState() == Character.State.DIED) {
             if (player.isAnimationFinished()) {
-                game.setScreen(new GameOverScreen(game, (int) score));
+                backgroundMusic.stop();
+                game.setScreen(new GameOverScreen(game, (int) player.score));
             }
         }
     }
@@ -211,11 +225,14 @@ class GameScreen implements Screen {
 
     @Override
     public void show() {
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0f);
+        backgroundMusic.play();
         screenShake = new ScreenShake(0.25f, 5f);
     }
 
     @Override
     public void dispose() {
-
+        backgroundMusic.dispose();
     }
 }

@@ -10,7 +10,6 @@ public class SideScrollerGame extends Game {
 
 	public static SpriteBatch batch;
 	public StartScreen startScreen;
-	public static Random random = new Random();
 
 	@Override
 	public void create() {

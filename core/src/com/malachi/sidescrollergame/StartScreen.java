@@ -11,7 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -26,6 +26,7 @@ public class StartScreen implements Screen {
     private OrthographicCamera camera;
     private Stage stage;
     private Skin skin;
+    private Music backgroundMusic;
 
     public StartScreen(SideScrollerGame game) {
         this.game = game;
@@ -34,10 +35,13 @@ public class StartScreen implements Screen {
         stage = new Stage();
         skin = new Skin(Gdx.files.internal("comic-ui.json"), new TextureAtlas(Gdx.files.internal("comic-ui.atlas")));
         stage = new Stage(new ScreenViewport());
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("Sounds/bgmusic.wav"));
+        backgroundMusic.setLooping(true);
     }
 
     @Override
     public void show() {
+        backgroundMusic.play();
         Gdx.input.setInputProcessor(stage);
 
         float menuWidth = stage.getWidth() / 3;
@@ -138,10 +142,12 @@ public class StartScreen implements Screen {
 
     @Override
     public void hide() {
+        backgroundMusic.stop();
     }
 
     @Override
     public void dispose() {
         stage.dispose();
+        backgroundMusic.dispose();
     }
 }

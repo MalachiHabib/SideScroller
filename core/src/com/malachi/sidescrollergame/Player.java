@@ -6,6 +6,7 @@ import static com.malachi.sidescrollergame.GameScreen.WORLD_WIDTH;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -17,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Player extends Character {
+    float score = 0;
     private final TextureAtlas playerAtlas = new TextureAtlas("playerAtlas.atlas");
     private final TextureAtlas projectileAtlas = new TextureAtlas("Projectiles.atlas");
     private final List<Projectile> projectiles;
@@ -25,6 +27,10 @@ public class Player extends Character {
     private float timeSinceLastDash = 0;
     private State state;
     private float stateTime;
+    private Sound fireSound, death, dash;
+
+    private boolean hasPlayedDeathSound = false;
+
 
     public Player(float movementSpeed, float width, float height,
                   float posX, float posY, float timeBetweenShots) {
@@ -33,10 +39,12 @@ public class Player extends Character {
         dieAnimation = new Animation<TextureRegion>(0.1f, playerAtlas.findRegions("skeleton-Destroy"), Animation.PlayMode.LOOP);
         stateTime = 0;
         projectiles = new ArrayList<>();
-
         state = State.IDLE;
-
+        fireSound = Gdx.audio.newSound(Gdx.files.internal("Sounds/rlaunch.wav"));
+        death = Gdx.audio.newSound(Gdx.files.internal("Sounds/explosion07.wav"));
+        dash = Gdx.audio.newSound(Gdx.files.internal("Sounds/swoosh.wav"));
     }
+
 
     @Override
     public void translate(float xChange, float yChange) {
@@ -70,6 +78,10 @@ public class Player extends Character {
         Animation<TextureRegion> currentAnimation;
         switch (state) {
             case DIED:
+                if(!hasPlayedDeathSound) {
+                    death.play();
+                    hasPlayedDeathSound = true;
+                }
                 currentAnimation = dieAnimation;
                 break;
             default:
@@ -102,10 +114,12 @@ public class Player extends Character {
 
 
     public void addNewProjectile() {
+        fireSound.play(0.2f);
         Projectile projectile = new Projectile(boundingBox.x + 11f, boundingBox.y + .5f, 6, 2, speed * 2.5f, projectileAtlas.findRegion("04"));
         timeSinceLastShot = 0;
         projectiles.add(projectile);
     }
+
 
     public void removeOutOfBoundsProjectiles(float worldWidth) {
         Iterator<Projectile> iterator = projectiles.iterator();
@@ -118,6 +132,7 @@ public class Player extends Character {
     }
 
     public void dash(float xMovement, float yMovement) {
+        dash.play();
         if (timeSinceLastDash >= dashCoolDown) {
             float dashX = xMovement * dashDistance;
             float dashY = yMovement * dashDistance;

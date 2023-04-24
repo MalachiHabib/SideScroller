@@ -6,36 +6,26 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
 
 public class GameOverScreen implements Screen {
-    private SideScrollerGame game;
-    private OrthographicCamera camera;
-    private Stage stage;
-    private Skin skin;
+    private final SideScrollerGame game;
+    private final OrthographicCamera camera;
+    private final Stage stage;
+    private final Skin skin;
     private int score;
 
     public GameOverScreen(SideScrollerGame game, int score) {
         this.game = game;
         this.score = score;
-        SpriteBatch batch = game.batch;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage = new Stage();
@@ -45,14 +35,17 @@ public class GameOverScreen implements Screen {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
-        Image background = new Image(new Texture("black.jpeg"));
+        Texture backgroundTexture = new Texture("end.png");
+        Image background = new Image(backgroundTexture);
+        background.setScale(.5f);
         stage.addActor(background);
+
         // Create game over message and score display
         Label.LabelStyle gameOverStyle = new Label.LabelStyle(skin.getFont("title"), Color.WHITE);
         Label gameOverLabel = new Label("GAME OVER", gameOverStyle);
         gameOverLabel.setPosition(stage.getWidth() / 2 - gameOverLabel.getWidth() / 2, stage.getHeight() * 0.8f);
 
-        Label.LabelStyle scoreStyle = new Label.LabelStyle(skin.getFont("font"), Color.WHITE);
+        Label.LabelStyle scoreStyle = new Label.LabelStyle(skin.getFont("title"), Color.WHITE);
         Label scoreLabel = new Label("Score: " + score, scoreStyle);
         scoreLabel.setPosition(stage.getWidth() / 2 - scoreLabel.getWidth() / 2, stage.getHeight() * 0.7f);
 
