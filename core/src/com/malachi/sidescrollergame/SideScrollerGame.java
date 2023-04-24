@@ -1,10 +1,8 @@
 package com.malachi.sidescrollergame;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
-import java.util.Random;
+import com.malachi.sidescrollergame.screens.StartScreen;
 
 public class SideScrollerGame extends Game {
 
